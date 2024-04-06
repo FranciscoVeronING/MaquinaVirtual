@@ -26,6 +26,8 @@ int get_seccion_reg( struct VM mv, int op_content);
 void extract_op(int op_content, char *cod_reg, short int *offset);
 void load_memory(FILE * file_mv, struct VM mv);
 
+int get_registro(int op, struct VM mv);
+void set_registro(int op, int valor, struct VM mv);
 
 int main(int argc, char *argv[]) {
 
@@ -377,6 +379,7 @@ void extract_op(int op_content, char *cod_reg, short int *offset){
     *cod_reg = (char)((op_content & mask)>>16);
     *offset = (short int)(op_content & 0x0000FFFF);
 }
+*/
 
 int value_op(int op_content, char op_type, struct VM mv){  //obtiene el valor del operando
     int value,cod_seg;
@@ -405,7 +408,7 @@ int value_op(int op_content, char op_type, struct VM mv){  //obtiene el valor de
 
 
 
-int get_registro(int op, int mv.registers_table[]){
+int get_registro(int op, struct VM mv){
 //obtiene el valor de un registro
     int cod_reg, sec_reg, valor;
     sec_reg = op >> 4 & 0x3;        //almacena el tipo de registro
@@ -413,9 +416,47 @@ int get_registro(int op, int mv.registers_table[]){
     switch (sec_reg) {
         case 0:{
             valor = mv.registers_table[cod_reg];
+            break;
         }
+        case 1:{
+            valor = mv.registers_table[cod_reg] & 0xFF;
+            break;
+        }
+        case 2:{
+            valor = mv.registers_table[cod_reg] & 0xFF00;
+            break;
+        }
+        case 3:{
+            valor = mv.registers_table[cod_reg] & 0xFFFF;
+            break;
+        }
+    }
+    return valor;
+}
 
+void set_registro(int op, int valor, struct VM mv){
+    //cambia el valor de un registro
+    int cod_reg, sec_reg;
+    sec_reg = op >> 4 & 0x3;        //almacena el tipo de registro
+    cod_reg = op & 0xF;             //almacena el registro
+    switch (sec_reg) {
+        case 0:{
+            mv.registers_table[cod_reg] = valor; //Caso EAX
+            break;
+        }
+        case 1:{
+            mv.registers_table[cod_reg] = (mv.registers_table[cod_reg] & 0xFFFFFF00) | valor; //se quieren mantener los 24 bits y modificar los ultimos 8 (caso AL)
+            break;
+        }
+        case 2:{
+            mv.registers_table[cod_reg] = (mv.registers_table[cod_reg] & 0xFFFF00FF) | (valor << 8); // Caso modificar AH
+            break;
+        }
+        case 3:{
+            mv.registers_table[cod_reg] = (mv.registers_table[cod_reg] & 0xFFFF0000) | valor; //Caso modificar AX
+            break;
+        }
+    }
 }
 
 
-}

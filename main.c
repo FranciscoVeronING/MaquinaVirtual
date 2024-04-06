@@ -43,98 +43,87 @@ int main(int argc, char *argv[]) {
         perror("Error al abrir el archivo ");
         return 1;
     }
-    char header[7];
+    char header[8];
 
     // Leer los primeros 6 bytes del archivo
-
-    int header_check = fread(header, 1, sizeof(header), file_mv);
-    if (header_check != sizeof(header)) {     //Valida que se pudo leer los 6 bytes del archivo.
-        if (feof(file_mv)) {
-            printf("El archivo es mas corto de lo esperado.\n");
-        } else {
-            perror("Error al leer el archivo ");
-        }
+    fread(&header,sizeof(char),8,file_mv);
+    //strcat(header,"\0");
+    ///VMX241
+    printf("%s",header);
+    //Valida que la cabecera del archivo esta bien
+    if(strncmp(header,"VMX24",5) != 0){// O PONER header != 0xVMX241
+        perror("Error al abrir el archivo pito");
         fclose(file_mv);
         return 1;
     }
     else{
-        strcat(header,"\0");
+        //COMIENZO DE CARGA DE ARCHIVO EN CS (Code Segment)
+        //Creacion de tabla de descriptores de segmentos
+        //carga de CS e inicializacion de SDT
+        load_memory(file_mv,mv);
 
-        //Valida que la cabecera del archivo esta bien
+        //Se inicializa tabla de registros
 
-        if(strcmp(header,"VMX241") != 0){// O PONER header != 0xVMX241
-            perror("Error al abrir el archivo pito");
-            fclose(file_mv);
-            return 1;
-        }
-        else{
-            //COMIENZO DE CARGA DE ARCHIVO EN CS (Code Segment)
-            //Creacion de tabla de descriptores de segmentos
-            //carga de CS e inicializacion de SDT
+        //para mi aca va funcion de inicializa tabla
+        mv.registers_table[0] = mv.segment_descriptor_table[0].base << 16; //corresponde a CS
+        mv.registers_table[1] = mv.segment_descriptor_table[1].base << 16; //corresponde a DS
+        mv.registers_table[5] = mv.segment_descriptor_table[0].base << 16; //corresponde a IP
 
-            load_memory(file_mv,mv);
+        //EJECUCION
+        int i = 0, j = 0, opB_content, opA_content;
+        char pos_act = mv.memory[i];
+        char opA, opB, cod_op, mask;
+        short int opA_size, opB_size;
 
-            //Se inicializa tabla de registros
+        while(i != mv.segment_descriptor_table[0].size && pos_act != 0xff ) {
+            //carga de operandos
+            opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
+            opA = (char)((pos_act & 0b00110000) >> 4);
+            cod_op = (char)(pos_act & 0b00011111);
+            opB_size = (short)(~opB);
+            opA_size =  (short)(~opA);
 
-            //para mi aca va funcion de inicializa tabla
-            mv.registers_table[0] = mv.segment_descriptor_table[0].base << 16; //corresponde a CS
-            mv.registers_table[1] = mv.segment_descriptor_table[1].base << 16; //corresponde a DS
-            mv.registers_table[5] = mv.segment_descriptor_table[0].base << 16; //corresponde a IP
+            //CARGAMOS EN OPX_CONTENT EL CONTENIDO DE LOS OPERANDOS.
+            opB_content = 0x0000;
+            opA_content = 0x0000;
+            j = 0;
+            while (j < opB_size) {
+                opB_content = (opB_content | mv.memory[++i]) << 8;
+                j++;
+            }
+            j = 0;
+            while (j < opA_size) {
+                opA_content = (opA_content | mv.memory[++i]) << 8;
+                j++;
+            }
 
-            //EJECUCION
-            int i = 0, j = 0, opB_content, opA_content;
-            char pos_act = mv.memory[i];
-            char opA, opB, cod_op, mask;
-            short int opA_size, opB_size;
 
-            while(i != mv.segment_descriptor_table[0].size && pos_act != 0xff ) {
-                //carga de operandos
-                opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
-                opA = (char)((pos_act & 0b00110000) >> 4);
-                cod_op = (char)(pos_act & 0b00011111);
-                opB_size = (short)(~opB);
-                opA_size =  (short)(~opA);
+            //ACA EJECUTA OPERACION
 
-                //CARGAMOS EN OPX_CONTENT EL CONTENIDO DE LOS OPERANDOS.
-                opB_content = 0x0000;
-                opA_content = 0x0000;
-                j = 0;
-                while (j < opB_size) {
-                    opB_content = (opB_content | mv.memory[++i]) << 8;
-                    j++;
-                }
-                j = 0;
-                while (j < opA_size) {
-                    opA_content = (opA_content | mv.memory[++i]) << 8;
-                    j++;
-                }
-                //ACA EJECUTA OPERACION
+            //opA_content = funcion(opA_content, opB_content); validaria que tipo de operando es
+            //opB_content = funcion(opA_content, opB_content); validaria que tipo de operando es
 
-                //opA_content = funcion(opA_content, opB_content); validaria que tipo de operando es
-                //opB_content = funcion(opA_content, opB_content); validaria que tipo de operando es
+            /**
+            * que necesitamos?\n
+            *\n
+            * * codigo de operacion  \n
+            * * operando A \n
+            * * operando B \n
+            * * contenido de A \n
+            * * contenido de B \n
+            * * tipos de operando \n
+            *\n
+            * juntando estas cosas, deberiamos poder ejecutar la instruccion\n
+            *\n
+            * analizar el contenido de cada tipo de operando(registro, inmediato, memoria)\n
+            */
 
-                /**
-                 * que necesitamos?\n
-                 *\n
-                 * * codigo de operacion  \n
-                 * * operando A \n
-                 * * operando B \n
-                 * * contenido de A \n
-                 * * contenido de B \n
-                 * * tipos de operando \n
-                 *\n
-                 * juntando estas cosas, deberiamos poder ejecutar la instruccion\n
-                 *\n
-                 * analizar el contenido de cada tipo de operando(registro, inmediato, memoria)\n
-                 */
-
-                //Se actualiza IP
-                pos_act = mv.memory[++i];
-                int aux = mv.registers_table[5] & 0xffff0000;
-                mv.registers_table[5] = aux | pos_act;
+            //Se actualiza IP
+            pos_act = mv.memory[++i];
+            int aux = mv.registers_table[5] & 0xffff0000;
+            mv.registers_table[5] = aux | pos_act;
             }
         }
-    }
 }
 
 void load_memory(FILE * file_mv, struct VM mv){
@@ -184,8 +173,8 @@ void set_memoria(struct VM mv, char opA,char opB,int opA_content,int opB_content
             /// a ese valor, que ya de por si tiene un offset, hay que agregarle el otro offset\n
             int value = mv.registers_table[cod_regB];
             value = value | offsetB;
-            int index = mv.segment_descriptor_table[cod_regA].base + offsetA;
-            mv.memory[index] = (char) mv.memory[value] ;
+            int index = mv.segment_descriptor_table[cod_regA].base + offsetA; //controlar fin de segmento!!!!
+            mv.memory[index] = (char) mv.memory[value];
             index++;
             value++;
             mv.memory[index] = (char) mv.memory[value];
@@ -201,13 +190,13 @@ void set_memoria(struct VM mv, char opA,char opB,int opA_content,int opB_content
         case 0x1: {
             ///inmediato
             int index = mv.segment_descriptor_table[cod_regA].base + offsetA;
-            mv.memory[index] = (opB_content & 0xFF000000);
+            mv.memory[index] = 0;
             index++;
-            mv.memory[index] = (opB_content & 0x00FF0000);
+            mv.memory[index] = 0;
             index++;
-            mv.memory[index] = (opB_content & 0x0000FF00);
+            mv.memory[index] = (char) ((opB_content & 0x0000FF00)>>8);
             index++;
-            mv.memory[index] = (opB_content & 0x000000FF);
+            mv.memory[index] = (char) (opB_content & 0x000000FF);
             break;
         }
         case 0x2: {
@@ -218,13 +207,13 @@ void set_memoria(struct VM mv, char opA,char opB,int opA_content,int opB_content
 
             /// momento de asignar los 4 bytes 1 a 1
             int index = mv.segment_descriptor_table[cod_regA].base + offsetA;
-            mv.memory[index] = (value & 0xFF000000);
+            mv.memory[index] = (char)((value & 0xFF000000)>>24);
             index++;
-            mv.memory[index] = (value & 0x00FF0000);
+            mv.memory[index] = (char)((value & 0x00FF0000)>>16);
             index++;
-            mv.memory[index] = (value & 0x0000FF00);
+            mv.memory[index] = (char)((value & 0x0000FF00)>>8);
             index++;
-            mv.memory[index] = (value & 0x000000FF);
+            mv.memory[index] = (char)(value & 0x000000FF);
             break;
         }
     }
@@ -274,6 +263,13 @@ int get_seccion_reg(struct VM mv, int op_content){
     return register_value;
 }
 
+
+int get_memoria(int op_content, struct VM mv){
+    int value;
+
+
+    return value;
+}
 
 void set_registro(char opA,char opB,int opA_content,int opB_content,struct VM mv){
     //cambio de valores en registro
@@ -371,3 +367,41 @@ void set_registro(char opA,char opB,int opA_content,int opB_content,struct VM mv
     }
 }
 
+
+
+int value_op(int op_content, char op_type, struct VM mv){  //obtiene el valor del operando
+    int value,cod_seg,sec_reg,cod_reg,offset,dir;
+    switch(op_type){
+        case 0:
+            value = get_memoria(op_content,mv);
+            break;
+        case 1:
+            value = op_content;
+            break;
+        case 2:
+            value = get_registro(op_content,mv.registers_table);
+            break;
+    }
+    return value;
+}
+
+
+
+
+
+
+
+int get_registro(int op, int mv.registers_table[]){
+//obtiene el valor de un registro
+    int cod_reg, sec_reg, valor;
+    sec_reg = op >> 4 & 0x3;        //almacena el tipo de registro
+    cod_reg = op & 0xF;             //almacena el registro
+    switch (sec_reg) {
+        case 0:{
+            valor = mv.registers_table[cod_reg];
+        }
+
+}
+
+
+}

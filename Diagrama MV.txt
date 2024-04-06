@@ -1,0 +1,84 @@
+(1)-validacion de que se puede ejecutar el programa .vmx(revisar encabezado del .vmx)
+   -Si !(1)
+	Error de ejecucion, imprimir cartel
+    else
+	(2)Carga el codigo en el CodeSegment(separar header del .vmx y copiar TODO el resto)(REVISAR TAMAÑO DEL CODIGO ANTES DE CARGARLO)
+	(2a)Inicializar memoria
+	(3)Armar tabla de descriptores de segmentos()
+	(4)Inicializar registros(00|00 para CS, 01|xx para DS, IP, se inicializa en 00|00, es decir donde esta CS)
+	COMINEZA EJECUCION
+	(5)Leer instruccion apuntada por IP.
+	(6)Interpretar operandos y operacion
+	(7)ubicar IP en nueva instruccion
+	(8)Ejecutar operacion.
+	(5 a 8 en loop hasta llegar a FF, es decir, instruccion STOP, o el registro IP apunte fuera del CS)
+
+
+1. Analisis de Header, 
+- byte 0 a 4,identificador(VMX24, 0x564D583234)
+- byte 5, indica version (1, 0x1)
+- byte 6 a 7, indica tamaño del codigo(ej, 0x003B, es decir, 59 Bytes), aca hacer resta por 16KiB paravalidar tambien tamaño de codigo.
+	
+	VARIABLES auxiliares a usar,
+	* "code_size"(guardamos tamaño del CS)
+
+//listo
+
+Si esta todo OK, seguimos
+
+2a.
+	inicializar en Char Memory[] = 16KiB; //LISTO
+
+2.
+Hacer SHL de 7 Bytes(56bits) y copiamos el contenido del archivo binario en el CS
+//listo
+
+3.
+	TABLA DE DESCRIPTORES DESEGMENTO(TDS) (array de 0 a 7 de tipo struct, 2 campos: base, size)
+	Direccion
+	pos 0 = base en 00 para CS, size en XX(en este ejemplo, 0x003B) 
+	pos 1 = XX para DS(XX es el final de CS, en este ejemplo, 0x003B es el final, por ende ese es el valor)
+		size en 16KiB-XX
+
+//listo
+
+4.Inicializar Registros	
+
+	TABLA DE REGISTROS(INT Registers[16] )
+pos	Dir_Relativa	valores
+00		0x0000	0000 para CS(los 2 bytes mas significativos corresponden al 1er campo del struct)
+01		0x0001	0000 para DS(los 2 bytes mas significativos corresponden al 1er campo del struct)
+05		0x0000	0000 para IP( misma direccion que CS)
+(lo demas registros no hace falta inicializarlos)
+
+/LISTO
+
+5.6.
+Leer instruccion apuntada por IP e Interpretar operandos y operacion
+Se carga en IP,en "valores" EL 1eros bytes donde apunta CS.
+se guarda los 5 bits menos significativos( aux = dato & 0b00011111 //0x1F) para saber el tipo de operacion
+se guarda los 2 bits mas significativos(opb = dato & 0b11000000 //0xC0)para saber operando B
+se guarda el bit 3 y 4 de los mas significativos( opA = dato & 0b00110000 //0x30) para saber operando A
+se guarda tamaños de A y B( !opA, y ! opB)
+
+//LISTO
+
+7. Ubicar IP en nueva instruccion
+Se toma el valor de tamaño de Operando B, y se posiciona IP en IP+1
+Luego se carga los bytes de opB_size(auxB 0xXXXX, la cantidad que sea necesario) y me desplazo IP = IP + OPB_size
+Luego se carga los bytes de opA_size(auxA 0xXXXX, la cantidad que sea necesario) y me desplazo IP = IP + OPA_size
+
+
+//LISTO
+8.
+Ejecutar operacion
+
+(ver Diagrama Operaciones MV.txt)
+
+9. 
+Ir a 5. hasta encontrar FF o que IP apuenta fuera de CS
+	
+
+mov(mv,op1,op2(o arreglo de op[]);--> llego con vector de funciones
+setOp(mv, op1, getop(op2)(int 32));
+

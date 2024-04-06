@@ -219,11 +219,7 @@ void set_memoria(struct VM mv, char opA,char opB,int opA_content,int opB_content
     }
 }
 
-void extract_op(int op_content, char *cod_reg, short int *offset){
-    int mask = 0x000F0000;
-    *cod_reg = (char)((op_content & mask)>>16);
-    *offset = (short int)(op_content & 0x0000FFFF);
-}
+
 
 int get_seccion_reg(struct VM mv, int op_content){
     ///
@@ -261,14 +257,6 @@ int get_seccion_reg(struct VM mv, int op_content){
         }
     }
     return register_value;
-}
-
-
-int get_memoria(int op_content, struct VM mv){
-    int value;
-
-
-    return value;
 }
 
 void set_registro(char opA,char opB,int opA_content,int opB_content,struct VM mv){
@@ -368,18 +356,44 @@ void set_registro(char opA,char opB,int opA_content,int opB_content,struct VM mv
 }
 
 
+int get_memoria(int pointer, struct VM mv){
+   ///hay 2 opciones, si es memoria directa, o si es la memoria de un registro
+    int value = 0;
+    int index = pointer & 0x0000FFFF; //OFFSET
+    if(index >= (mv.segment_descriptor_table[pointer & 0xFFFF0000].size - 4)){
+       value = (int)mv.memory[index];
+       value |= mv.memory[index + 1] << 8;
+       value |= mv.memory[index + 2] << 16;
+       value |= mv.memory[index + 3] << 24;
+    }
+    else{
+        perror("te caiste del segmento pa");
+    }
+    return value;
+}
+
+void extract_op(int op_content, char *cod_reg, short int *offset){
+    int mask = 0x000F0000;
+    *cod_reg = (char)((op_content & mask)>>16);
+    *offset = (short int)(op_content & 0x0000FFFF);
+}
 
 int value_op(int op_content, char op_type, struct VM mv){  //obtiene el valor del operando
-    int value,cod_seg,sec_reg,cod_reg,offset,dir;
+    int value,cod_seg;
     switch(op_type){
-        case 0:
-            value = get_memoria(op_content,mv);
+        case 0: {   //caso de memoria
+            char code_reg = (char) ((op_content & 0x0F0000) >> 16);
+            int offset_1 = op_content & 0x00FFFF;
+            int offset_2 = mv.registers_table[code_reg] & 0x0000FFFF;
+            int pointer = (int)((mv.registers_table[code_reg] & 0xFFFF0000) + (offset_1 + offset_2));
+            value = get_memoria(pointer, mv);
             break;
-        case 1:
+        }
+        case 1:  //caso inmediato
             value = op_content;
             break;
-        case 2:
-            value = get_registro(op_content,mv.registers_table);
+        case 2: //caso registro
+            value = get_registro(op_content,mv);
             break;
     }
     return value;

@@ -1,0 +1,5 @@
+MOV [10], 40
+MOV [5],[10]
+MOV DH,20
+MOV DL,15
+MOV [10],EDX

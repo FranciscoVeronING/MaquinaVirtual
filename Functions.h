@@ -42,6 +42,6 @@ int get_puntero(int opA_content,struct VM mv);
  *
  * @param functions tabla de 24 funciones
  */
-void llamado_funcion(struct VM* mv, int opA,int opA_content,int opB,int opB_content,char cod_op);
+void llamado_funcion(struct VM* mv, char opA,int opA_content,char opB,int opB_content,char cod_op);
 
 #endif //VIRTUAL_MACHINE_FUNCTIONS_H

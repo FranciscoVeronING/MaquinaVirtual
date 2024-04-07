@@ -62,11 +62,12 @@ int main(int argc, char *argv[]) {
         printf(" %d", size_cs);
         int i = 0;
         char aux;
+        fread(&aux, sizeof(char), 1, file_mv);
         while(!feof(file_mv)){
             //carga la memoria ram con el codigo de segmento
-            fread(&aux, sizeof(char), 1, file_mv);
             mv.memory[i] = aux;
             i++;
+            fread(&aux, sizeof(char), 1, file_mv);
         }
         fclose(file_mv);
         scanf("%c",&aux);
@@ -124,23 +125,15 @@ int main(int argc, char *argv[]) {
             }
             opA_content >>= 8;
 
-
+            /*
             printf(" \n %X este es opAcontent\n", opA_content);
             printf(" \n %X este es opBcontent\n", opB_content);
             printf("\n %x este es cod op \n", cod_op);
             printf("\n ANTES DE EJECUCION \n");
-            for (int j = 0 ; j < 15; j++) {
-                printf("\t %X",mv.memory[j]);
-            }
+            */
 
-            //ACA EJECUTA OPERACION
-            llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op);
-            //opA_content = funcion(opA_content, opB_content); validaria que tipo de operando es
-            //opB_content = funcion(opA_content, opB_content); validaria que tipo de operando es
-            printf("paso mov");
-
-
-            /**
+            /**ACA EJECUTA OPERACION\n
+            *
             * que necesitamos?\n
             *\n
             * * codigo de operacion  \n
@@ -154,7 +147,8 @@ int main(int argc, char *argv[]) {
             *\n
             * analizar el contenido de cada tipo de operando(registro, inmediato, memoria)\n
             */
-
+            llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op);
+           // printf("paso mov");
             //Se actualiza IP
             ip += 1;
             pos_act = mv.memory[ip];
@@ -163,36 +157,18 @@ int main(int argc, char *argv[]) {
             }
         }
     printf("\n DESUPUES  DE EJECUCION \n");
-    for (int j = 0 ; j < 15; j++) {
-        printf("\t %X",mv.memory[j]);
-    }
-
-}
-/*
-void load_memory(FILE * file_mv, struct VM mv){
-
-    short int size_cs ;
-    fread( &size_cs, 1, 2, file_mv);
-    int i = 0;
-    char aux;
-    while(!feof(file_mv)){
-         //carga la memoria ram con el codigo de segmento
-         fread(&aux, 1, 1, file_mv);
-         aux =mv.memory[i];
-        printf("%x \t", mv.memory[i]);
-        if(i % 10 == 0)
+    for (int j = 0 ; j < 60; j++) {
+        if(j%10 == 0)
             printf("\n");
-         i++;
+        printf("\t %d",mv.memory[j]);
     }
-    fclose(file_mv);
-
-//carga de Tabla de descriptores de segmento
-    mv.segment_descriptor_table[0].base = 0x0000;
-    mv.segment_descriptor_table[0].size = size_cs;
-    mv.segment_descriptor_table[1].base = size_cs;
-    mv.segment_descriptor_table[1].size = MEMORY_SIZE - size_cs;
-
+    printf("\n TABLA DE REGISTROS PA \n");
+    for (int j = 0 ; j < 16; j++) {
+        if(j%4 == 0)
+            printf("\n");
+        printf("\t %X",mv.registers_table[j]);
+    }
 }
-*/
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 

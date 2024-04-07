@@ -20,7 +20,7 @@ void extract_op(int op_content, char *cod_reg, short int *offset);
 void load_memory(FILE * file_mv, struct VM mv);
 
 int get_registro(int op, struct VM mv);
-void set_registro(int op, int valor, struct VM mv);
+void set_registro(int op, int valor, struct VM* mv);
 
 int main(int argc, char *argv[]) {
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
         perror("Error al abrir el archivo ");
         return 1;
     }
-    char header[8];
+    char header[5];
 
     // Leer los primeros 6 bytes del archivo
     fread(&header,sizeof(char),8,file_mv);
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     printf("%s",header);
     //Valida que la cabecera del archivo esta bien
     if(strncmp(header,"VMX24",5) != 0){// O PONER header != 0xVMX241
-        perror("Error al abrir el archivo pito");
+        perror("Error al abrir el archivo , header erroneo");
         fclose(file_mv);
         return 1;
     }
@@ -55,44 +55,86 @@ int main(int argc, char *argv[]) {
         //COMIENZO DE CARGA DE ARCHIVO EN CS (Code Segment)
         //Creacion de tabla de descriptores de segmentos
         //carga de CS e inicializacion de SDT
-        load_memory(file_mv,mv);
+
+        ///load_memory(file_mv,mv);
+        unsigned int size_cs;
+        size_cs = (header[6] << 8 ) | header[7];
+        printf(" %d", size_cs);
+        int i = 0;
+        char aux;
+        while(!feof(file_mv)){
+            //carga la memoria ram con el codigo de segmento
+            fread(&aux, sizeof(char), 1, file_mv);
+            mv.memory[i] = aux;
+            i++;
+        }
+        fclose(file_mv);
+        scanf("%c",&aux);
+
+//carga de Tabla de descriptores de segmento
+        mv.segment_descriptor_table[0].base = 0x0000;
+        mv.segment_descriptor_table[0].size = size_cs;
+        mv.segment_descriptor_table[1].base = size_cs;
+        mv.segment_descriptor_table[1].size = MEMORY_SIZE - size_cs;
+
 
         //Se inicializa tabla de registros
 
         //para mi aca va funcion de inicializa tabla
         mv.registers_table[0] = mv.segment_descriptor_table[0].base << 16; //corresponde a CS
-        mv.registers_table[1] = mv.segment_descriptor_table[1].base << 16; //corresponde a DS
+        mv.registers_table[1] = 0x00010000 | mv.segment_descriptor_table[1].base; //corresponde a DS
         mv.registers_table[5] = mv.segment_descriptor_table[0].base << 16; //corresponde a IP
-
+        printf("%x DS\n", mv.registers_table[1]);
         //EJECUCION
-        int i = 0, j = 0, opB_content, opA_content;
-        char pos_act = mv.memory[i];
+        int ip = mv.segment_descriptor_table[0].base, j = 0, opB_content, opA_content;
+        char pos_act = mv.memory[ip];
         char opA, opB, cod_op, mask;
-        short int opA_size, opB_size;
-        while(i <= mv.segment_descriptor_table[0].size && (pos_act != 0xFF) ) {
+        char opA_size, opB_size;
+        while(ip <= mv.segment_descriptor_table[0].size && (pos_act != 0xFF) ) {
+            printf(" \n %X este es el contenido de pos act\n", pos_act);
             //carga de operandos
             opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
             opA = (char)((pos_act & 0b00110000) >> 4);
             cod_op = (char)(pos_act & 0b00011111);
-            opB_size = (short)(~opB);
-            opA_size =  (short)(~opA);
+
+            opB_size =  opB;
+            opB_size ^=  0x03;
+            opA_size =  opA;
+            opA_size ^=  0x03;
+
+
+            printf(" \n %X este es opAsize\n", opA_size);
+            printf(" \n %X este es opBsize\n", opB_size);
 
             //CARGAMOS EN OPX_CONTENT EL CONTENIDO DE LOS OPERANDOS.
             opB_content = 0x0000;
             opA_content = 0x0000;
             j = 0;
             while (j < opB_size) {
-                opB_content = (opB_content | mv.memory[++i]) << 8;
+                ip+= 1;
+                opB_content = (opB_content | mv.memory[ip]) << 8;
                 j++;
             }
+            opB_content >>= 8;
             j = 0;
             while (j < opA_size) {
-                opA_content = (opA_content | mv.memory[++i]) << 8;
+                ip+= 1;
+                opA_content = (opA_content | mv.memory[ip]) << 8;
                 j++;
             }
+            opA_content >>= 8;
+
+
+            printf(" \n %X este es opAcontent\n", opA_content);
+            printf(" \n %X este es opBcontent\n", opB_content);
             printf("\n %x este es cod op \n", cod_op);
+            printf("\n ANTES DE EJECUCION \n");
+            for (int j = 0 ; j < 15; j++) {
+                printf("\t %X",mv.memory[j]);
+            }
+
             //ACA EJECUTA OPERACION
-            llamado_funcion(mv, opA, opA_content, opB, opB_content, cod_op);
+            llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op);
             //opA_content = funcion(opA_content, opB_content); validaria que tipo de operando es
             //opB_content = funcion(opA_content, opB_content); validaria que tipo de operando es
             printf("paso mov");
@@ -114,25 +156,32 @@ int main(int argc, char *argv[]) {
             */
 
             //Se actualiza IP
-            pos_act = mv.memory[++i];
+            ip += 1;
+            pos_act = mv.memory[ip];
             int aux = mv.registers_table[5] & 0xffff0000;
             mv.registers_table[5] = aux | pos_act;
             }
         }
-    for (int j = 0; j < 50; j++) {
-        printf("\n %X",mv.memory[j]);
+    printf("\n DESUPUES  DE EJECUCION \n");
+    for (int j = 0 ; j < 15; j++) {
+        printf("\t %X",mv.memory[j]);
     }
 
 }
-
+/*
 void load_memory(FILE * file_mv, struct VM mv){
 
     short int size_cs ;
     fread( &size_cs, 1, 2, file_mv);
     int i = 0;
+    char aux;
     while(!feof(file_mv)){
          //carga la memoria ram con el codigo de segmento
-         fread(&(mv.memory[i]), 1, 1, file_mv);
+         fread(&aux, 1, 1, file_mv);
+         aux =mv.memory[i];
+        printf("%x \t", mv.memory[i]);
+        if(i % 10 == 0)
+            printf("\n");
          i++;
     }
     fclose(file_mv);
@@ -144,6 +193,6 @@ void load_memory(FILE * file_mv, struct VM mv){
     mv.segment_descriptor_table[1].size = MEMORY_SIZE - size_cs;
 
 }
-
+*/
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -7,7 +7,7 @@
 #define VIRTUAL_MACHINE_FUNCTIONS_H
 #include "maquina_virtual.h"
 
-void MOV(struct VM mv, int opA_content, int opB_content, char opA, char opB);
+void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB);
 void ADD(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void MUL(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void SUB(struct VM mv, int opA_content, int opB_content, char opA, char opB);
@@ -32,9 +32,9 @@ void LDL(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void LDH(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void NOT(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void STOP(struct VM mv, int opA_content, int opB_content, char opA, char opB);
-void set_memoria(int pointer, int value, struct  VM mv);
+void set_memoria(int pointer, int value, struct  VM* mv);
 int get_memoria(int pointer, struct VM mv);
-void set_registro(int op, int valor, struct VM mv);
+void set_registro(int op, int valor, struct VM* mv);
 int get_registro(int pointer, struct VM mv);
 int value_op(int op_content, char op_type, struct VM mv);
 int get_puntero(int opA_content,struct VM mv);
@@ -42,6 +42,6 @@ int get_puntero(int opA_content,struct VM mv);
  *
  * @param functions tabla de 24 funciones
  */
-void llamado_funcion(struct VM mv, int opA,int opA_content,int opB,int opB_content,char cod_op);
+void llamado_funcion(struct VM* mv, int opA,int opA_content,int opB,int opB_content,char cod_op);
 
 #endif //VIRTUAL_MACHINE_FUNCTIONS_H

@@ -24,7 +24,7 @@ void carga_nemonics(char nemonicos_tags[0x20][4]);
 
 int get_registro(int op, struct VM mv);
 void set_registro(int op, int valor, struct VM* mv);
-void dissasembler_func(char *argv[]);
+void dissasembler_func(struct  VM mv);
 
 int main(int argc, char *argv[]) {
 /// arg[0] = .exe; arg([1] .vmx
@@ -35,6 +35,13 @@ int main(int argc, char *argv[]) {
         dissasembler = 1;
     struct VM mv;
 
+    /**
+     * error = 1 Instruccion inválida
+     * error = 2 Caida de segmento
+     * error = 3 Division por Cero
+     * error = -1 flag del STOP
+     */
+    int error = 0;
 
 
     file_mv = fopen(argv[1], "rb");
@@ -95,7 +102,7 @@ int main(int argc, char *argv[]) {
         char pos_act = mv.memory[ip];
         char opA, opB, cod_op, mask;
         char opA_size, opB_size;
-        while(ip <= mv.segment_descriptor_table[0].size && (pos_act != 0xFF) ) {
+        while(ip <= mv.segment_descriptor_table[0].size && (error == 0) ) {
             printf(" \n %X este es el contenido de pos act\n", pos_act);
             //carga de operandos
             opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
@@ -151,7 +158,7 @@ int main(int argc, char *argv[]) {
             *\n
             * analizar el contenido de cada tipo de operando(registro, inmediato, memoria)\n
             */
-            llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op);
+            llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error);
            // printf("paso mov");
             //Se actualiza IP
             ip += 1;
@@ -173,7 +180,7 @@ int main(int argc, char *argv[]) {
         printf("\t %X",mv.registers_table[j]);
     }
     if(dissasembler)
-        dissasembler_func( argv[1]);
+        dissasembler_func(mv);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,19 +188,12 @@ int main(int argc, char *argv[]) {
 
 
 
-void dissasembler_func(char *argv[]){
+void dissasembler_func(struct  VM mv){
     char regs_tags[0x40][3];
     char nemonicos_tags[0X20][4];
     carga_regs(regs_tags);
     carga_nemonics(nemonicos_tags);
-    FILE *file_mv;
-    file_mv = fopen(argv[1], "rb");
-    if (file_mv == NULL) {
-        perror("Error al abrir el archivo ");
-    }
-    else{
 
-    }
 
 }
 

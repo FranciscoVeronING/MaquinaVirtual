@@ -21,7 +21,7 @@ void OR(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void XOR(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void RND(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void SYS(struct VM mv, int opA_content, int opB_content, char opA, char opB);
-void JMP(struct VM mv, int opA_content, int opB_content, char opA, char opB);
+void JMP(struct VM* mv, int opA_content, char opA);
 void JZ(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void JP(struct VM mv, int opA_content, int opB_content, char opA, char opB);
 void JN(struct VM mv, int opA_content, int opB_content, char opA, char opB);

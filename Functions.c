@@ -18,6 +18,12 @@ void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB){
     }
 }
 
+void JMP(struct VM* mv, int opA_content, char opA){
+    mv->registers_table[4]  = (int)(((*mv).registers_table[4] & 0xFFFF0000 )+(value_op(opA_content,opA,*mv) & 0x0000FFFF));
+}
+
+
+
 int get_puntero(int op_content,struct VM mv){
     int pointer ;
     ///00000 relleno xxxx cod_reg  yyyyyyyy yyyyyyyy offset

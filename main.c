@@ -19,20 +19,24 @@ int get_seccion_reg( struct VM mv, int op_content);
 void extract_op(int op_content, char *cod_reg, short int *offset);
 void load_memory(FILE * file_mv, struct VM mv);
 
+void carga_regs(char regs_tags[0x40][3]);
+void carga_nemonics(char nemonicos_tags[0x20][4]);
+
 int get_registro(int op, struct VM mv);
 void set_registro(int op, int valor, struct VM* mv);
+void dissasembler_func(char *argv[]);
 
 int main(int argc, char *argv[]) {
-
-     struct VM mv;
- /*   if (argc != 2) {
-        printf("Uso: %s <nombre_del_archivo_binario>\n", argv[0]);
-        return 1;
-    }
-*/
 /// arg[0] = .exe; arg([1] .vmx
     // Abrir el archivo en modo de lectura binaria
     FILE *file_mv;
+    int dissasembler = 0;
+    if(strcmp(argv[2],"-d") == 0)
+        dissasembler = 1;
+    struct VM mv;
+
+
+
     file_mv = fopen(argv[1], "rb");
     if (file_mv == NULL) {
         perror("Error al abrir el archivo ");
@@ -168,7 +172,87 @@ int main(int argc, char *argv[]) {
             printf("\n");
         printf("\t %X",mv.registers_table[j]);
     }
+    if(dissasembler)
+        dissasembler_func( argv[1]);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+
+void dissasembler_func(char *argv[]){
+    char regs_tags[0x40][3];
+    char nemonicos_tags[0X20][4];
+    carga_regs(regs_tags);
+    carga_nemonics(nemonicos_tags);
+    FILE *file_mv;
+    file_mv = fopen(argv[1], "rb");
+    if (file_mv == NULL) {
+        perror("Error al abrir el archivo ");
+    }
+    else{
+
+    }
+
+}
+
+void carga_regs(char regs_tags[0x40][3]){
+    strcpy( regs_tags[0], "CS");
+    strcpy( regs_tags[1], "DC");
+    strcpy( regs_tags[4], "IP");
+    strcpy( regs_tags[7], "CC");
+    strcpy( regs_tags[8], "AC");
+    strcpy( regs_tags[9], "EAX");
+    strcpy( regs_tags[10], "EBX");
+    strcpy( regs_tags[11], "ECX");
+    strcpy( regs_tags[12], "EDX");
+    strcpy( regs_tags[13], "EEX");
+    strcpy( regs_tags[14], "EFX");
+    strcpy( regs_tags[0x1A], "AL");
+    strcpy( regs_tags[0x1B], "BL");
+    strcpy( regs_tags[0x1C], "CL");
+    strcpy( regs_tags[0x1D], "DL");
+    strcpy( regs_tags[0x1E], "EL");
+    strcpy( regs_tags[0x1F], "FL");
+    strcpy( regs_tags[0x2A], "AH");
+    strcpy( regs_tags[0x2B], "BH");
+    strcpy( regs_tags[0x2C], "CH");
+    strcpy( regs_tags[0x2D], "DH");
+    strcpy( regs_tags[0x2E], "EH");
+    strcpy( regs_tags[0x2F], "FH");
+    strcpy( regs_tags[0x3A], "AX");
+    strcpy( regs_tags[0x3B], "BX");
+    strcpy( regs_tags[0x3C], "CX");
+    strcpy( regs_tags[0x3D], "DX");
+    strcpy( regs_tags[0x3E], "EX");
+    strcpy( regs_tags[0x3F], "FX");
+}
+
+void carga_nemonics(char nemonicos_tags[0x20][4]){
+    strcpy(nemonicos_tags[0x00],"MOV");
+    strcpy(nemonicos_tags[0x01],"ADD");
+    strcpy(nemonicos_tags[0x02],"SUB");
+    strcpy(nemonicos_tags[0x03],"SWAP");
+    strcpy(nemonicos_tags[0x04],"MUL");
+    strcpy(nemonicos_tags[0x05],"DIV");
+    strcpy(nemonicos_tags[0x06],"CMP");
+    strcpy(nemonicos_tags[0x07],"SHL");
+    strcpy(nemonicos_tags[0x08],"SHR");
+    strcpy(nemonicos_tags[0x09],"AND");
+    strcpy(nemonicos_tags[0x0A],"OR");
+    strcpy(nemonicos_tags[0x0B],"XOR");
+    strcpy(nemonicos_tags[0x0C],"RND");
+    strcpy(nemonicos_tags[0x10],"SYS");
+    strcpy(nemonicos_tags[0x11],"JMP");
+    strcpy(nemonicos_tags[0x12],"JZ");
+    strcpy(nemonicos_tags[0x13],"JP");
+    strcpy(nemonicos_tags[0x14],"JN");
+    strcpy(nemonicos_tags[0x15],"JNZ");
+    strcpy(nemonicos_tags[0x16],"JNP");
+    strcpy(nemonicos_tags[0x17],"JNN");
+    strcpy(nemonicos_tags[0x18],"LDL");
+    strcpy(nemonicos_tags[0x19],"LDH");
+    strcpy(nemonicos_tags[0x1A],"NOT");
+    strcpy(nemonicos_tags[0x1F],"STOP");
+}

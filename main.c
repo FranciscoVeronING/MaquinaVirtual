@@ -19,8 +19,8 @@ int get_seccion_reg( struct VM mv, int op_content);
 void extract_op(int op_content, char *cod_reg, short int *offset);
 void load_memory(FILE * file_mv, struct VM mv);
 
-void carga_regs(char regs_tags[0x40][3]);
-void carga_nemonics(char nemonicos_tags[0x20][4]);
+void carga_regs(char regs_tags[0x40][4]);
+void carga_nemonics(char nemonicos_tags[0x20][5]);
 
 int get_registro(int op, struct VM mv);
 void set_registro(int op, int valor, struct VM* mv);
@@ -31,18 +31,10 @@ int main(int argc, char *argv[]) {
     // Abrir el archivo en modo de lectura binaria
     FILE *file_mv;
     int dissasembler = 0;
-    if(strcmp(argv[2],"-d") == 0)
-        dissasembler = 1;
     struct VM mv;
 
-    /**
-     * error = 1 Instruccion inválida
-     * error = 2 Caida de segmento
-     * error = 3 Division por Cero
-     * error = -1 flag del STOP
-     */
-    int error = 0;
-
+    if(argv[2] && strcmp(argv[2],"-d") == 0)
+        dissasembler = 1;
 
     file_mv = fopen(argv[1], "rb");
     if (file_mv == NULL) {
@@ -81,6 +73,7 @@ int main(int argc, char *argv[]) {
             fread(&aux, sizeof(char), 1, file_mv);
         }
         fclose(file_mv);
+
         scanf("%c",&aux);
 
 //carga de Tabla de descriptores de segmento
@@ -102,7 +95,27 @@ int main(int argc, char *argv[]) {
         char pos_act = mv.memory[ip];
         char opA, opB, cod_op, mask;
         char opA_size, opB_size;
-        while(ip <= mv.segment_descriptor_table[0].size && (error == 0) ) {
+        /**
+     * error = 1 Instruccion inválida
+     * error = 2 Caida de segmento
+     * error = 3 Division por Cero
+     * error = -1 flag del STOP
+     */
+
+        int error = 0;
+        printf("\n ANTES  DE EJECUCION \n");
+        for (int j = 0 ; j < 80; j++) {
+            if(j%10 == 0)
+                printf("\n");
+            printf("\t %d",mv.memory[j]);
+        }
+        printf("\n TABLA DE REGISTROS PA \n");
+        for (int j = 0 ; j < 16; j++) {
+            if(j%4 == 0)
+                printf("\n");
+            printf("\t %X",mv.registers_table[j]);
+        }
+        while(ip < mv.segment_descriptor_table[0].size && error == 0) {
             printf(" \n %X este es el contenido de pos act\n", pos_act);
             //carga de operandos
             opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
@@ -136,12 +149,12 @@ int main(int argc, char *argv[]) {
             }
             opA_content >>= 8;
 
-            /*
+
             printf(" \n %X este es opAcontent\n", opA_content);
             printf(" \n %X este es opBcontent\n", opB_content);
             printf("\n %x este es cod op \n", cod_op);
             printf("\n ANTES DE EJECUCION \n");
-            */
+
 
             /**ACA EJECUTA OPERACION\n
             *
@@ -161,14 +174,31 @@ int main(int argc, char *argv[]) {
             llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error);
            // printf("paso mov");
             //Se actualiza IP
+
             ip += 1;
             pos_act = mv.memory[ip];
             int aux = mv.registers_table[5] & 0xffff0000;
             mv.registers_table[5] = aux | pos_act;
+
+            printf("\n DESUPUES  DE EJECUCION \n");
+            for (int j = 0 ; j <80 ; j++) {
+                if(j%10 == 0)
+                    printf("\n");
+                printf("\t %d",mv.memory[j]);
+            }
+            printf("\n TABLA DE REGISTROS PA \n");
+            for (int j = 0 ; j < 16; j++) {
+                if(j%4 == 0)
+                    printf("\n");
+                printf("\t %X",mv.registers_table[j]);
+            }
+
+
+
             }
         }
     printf("\n DESUPUES  DE EJECUCION \n");
-    for (int j = 0 ; j < 60; j++) {
+    for (int j = 0 ; j <80 ; j++) {
         if(j%10 == 0)
             printf("\n");
         printf("\t %d",mv.memory[j]);
@@ -179,8 +209,11 @@ int main(int argc, char *argv[]) {
             printf("\n");
         printf("\t %X",mv.registers_table[j]);
     }
+
     if(dissasembler)
         dissasembler_func(mv);
+
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,26 +222,109 @@ int main(int argc, char *argv[]) {
 
 
 void dissasembler_func(struct  VM mv){
-    char regs_tags[0x40][3];
-    char nemonicos_tags[0X20][4];
+    int i=0;
+    while(i<mv.segment_descriptor_table[0].size) {
+        printf("%X ", mv.memory[i]);
+        i++;
+    }
+    char regs_tags[0x40][4];
+    char nemonicos_tags[0X20][5];
     carga_regs(regs_tags);
     carga_nemonics(nemonicos_tags);
+    char pos_act = mv.segment_descriptor_table[0].base;
+    char opA, opB, cod_op;
+    int opA_size, opB_size, j, opA_content, opB_content, registro, offset;
+    while(pos_act < mv.segment_descriptor_table[0].size) {
+        /// [pos instruccion]  instrucciones en hexa | MNEM  OPA, OPB
+        printf("\n[%X] ", pos_act);
 
+        opB = (char) (((mv.memory[pos_act] & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
+        opA = (char) ((mv.memory[pos_act] & 0b00110000) >> 4);
+        cod_op = (char) (mv.memory[pos_act] & 0b00011111);
 
+        printf("%X ", mv.memory[pos_act]);
+
+        opB_size = opB;
+        opB_size ^= 0x03;
+        opA_size = opA;
+        opA_size ^= 0x03;
+        opA_content = 0;
+        opB_content = 0;
+        j = 0;
+        while (j < opB_size) {
+            pos_act += 1;
+            opB_content = (opB_content | mv.memory[pos_act]) << 8;
+            printf("%X ", mv.memory[pos_act]);
+            j++;
+        }
+        opB_content >>= 8;
+
+        j = 0;
+        while (j < opA_size) {
+            pos_act += 1;
+            opA_content = (opA_content | mv.memory[pos_act]) << 8;
+            printf("%X ", mv.memory[pos_act]);
+            j++;
+        }
+        opA_content >>= 8;
+        printf("\t | %s \t ", nemonicos_tags[cod_op]);
+
+        switch (opA) {
+            case 0: {    //memoria
+                registro = opA_content >> 16;
+                offset = opA_content & 0x00FFFF;
+                if (offset == 0)
+                    printf("[%s]", regs_tags[registro]);
+                else
+                    printf("[%s+%d]", regs_tags[registro], offset);
+                break;
+            }
+            case 1: {    //inmediato
+                printf("%d", opA_content);
+                break;
+            }
+            case 2: {    //registro
+                printf("%s", regs_tags[(char)opA_content]);
+                break;
+            }
+        }
+        switch (opB) {
+            case 0: {    //memoria
+                registro = opB_content >> 16;
+                offset = opB_content & 0x00FFFF;
+                if (offset == 0)
+                    printf(", [%s]", regs_tags[registro]);
+                else
+                    printf(", [%s+%d]", regs_tags[registro], offset);
+                break;
+            }
+            case 1: {    //inmediato
+                printf(", %d", opB_content);
+                break;
+            }
+            case 2: {    //registro
+                printf(", %s", regs_tags[(char)opB_content]);
+
+                break;
+            }
+        }
+        printf("\n");
+        pos_act++;
+    }
 }
 
-void carga_regs(char regs_tags[0x40][3]){
+void carga_regs(char regs_tags[0x40][4]){
     strcpy( regs_tags[0], "CS");
     strcpy( regs_tags[1], "DC");
     strcpy( regs_tags[4], "IP");
     strcpy( regs_tags[7], "CC");
     strcpy( regs_tags[8], "AC");
-    strcpy( regs_tags[9], "EAX");
-    strcpy( regs_tags[10], "EBX");
-    strcpy( regs_tags[11], "ECX");
-    strcpy( regs_tags[12], "EDX");
-    strcpy( regs_tags[13], "EEX");
-    strcpy( regs_tags[14], "EFX");
+    strcpy( regs_tags[0xA], "EAX");
+    strcpy( regs_tags[0xB], "EBX");
+    strcpy( regs_tags[0xC], "ECX");
+    strcpy( regs_tags[0xD], "EDX");
+    strcpy( regs_tags[0xE], "EEX");
+    strcpy( regs_tags[0xF], "EFX");
     strcpy( regs_tags[0x1A], "AL");
     strcpy( regs_tags[0x1B], "BL");
     strcpy( regs_tags[0x1C], "CL");
@@ -229,7 +345,7 @@ void carga_regs(char regs_tags[0x40][3]){
     strcpy( regs_tags[0x3F], "FX");
 }
 
-void carga_nemonics(char nemonicos_tags[0x20][4]){
+void carga_nemonics(char nemonicos_tags[0x20][5]){
     strcpy(nemonicos_tags[0x00],"MOV");
     strcpy(nemonicos_tags[0x01],"ADD");
     strcpy(nemonicos_tags[0x02],"SUB");

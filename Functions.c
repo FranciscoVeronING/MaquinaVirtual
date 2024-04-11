@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "Functions.h"
 
 void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB){
@@ -204,7 +205,7 @@ void CMP(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     int value_B = value_op(opB_content, opB, *mv);
 
     value_A -= value_B;
-    //cambiamos el valor del CC(condition code
+    //cambiamos el valor del CC(condition code)
     if(value_A < 0)
         mv->registers_table[7] = 0X10000000;
     else if(value_A == 0)
@@ -261,8 +262,8 @@ void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Obtenemos el valor del operando A y B
     int value_A = value_op(opA_content, opA, *mv);
     int value_B = value_op(opB_content, opB, *mv);
-
-    value_A =  random.randrage(0, value_B); ///buscar funcion random!
+    srand(time(NULL));
+    value_A =   rand()%value_B; ///buscar funcion random!
 
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
@@ -309,7 +310,7 @@ int get_puntero(int op_content,struct VM mv){
 
 void set_memoria(int pointer, int value, struct  VM* mv){
     /// el puntero tiene 2 bytes a codigo de segmento y 2 bytes de offset
-   // printf("estamos en set memoria\n");
+    printf("estamos en set memoria\n");
 
     int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
     (*mv).memory[index] = (char) ((value & 0xff000000) >> 24);
@@ -435,6 +436,21 @@ void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB
         case 0:{
             printf("entra a mov");
             MOV(mv, opA_content, opB_content, opA, opB);
+            break;
+        }
+        case 1:{
+            printf("entra a ADD");
+            ADD(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 2:{
+            printf("entra a SUB");
+            SUB(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 3:{
+            printf("entra a SWAP");
+            SWAP(mv,opA_content,opB_content,opA,opB);
             break;
         }
 

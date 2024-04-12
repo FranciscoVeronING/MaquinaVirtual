@@ -15,7 +15,7 @@ typedef struct segments_descriptors{
 
 typedef struct VM{
     struct segments_descriptors segment_descriptor_table[CANT_SDT];
-    char memory[MEMORY_SIZE];
+    unsigned char memory[MEMORY_SIZE];
     int registers_table[16];
 }VirtualMachine;
 

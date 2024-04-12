@@ -64,13 +64,14 @@ int main(int argc, char *argv[]) {
         size_cs = (header[6] << 8 ) | header[7];
         printf(" %d", size_cs);
         int i = 0;
-        char aux;
-        fread(&aux, sizeof(char), 1, file_mv);
+        unsigned char aux;
+        fread(&aux, sizeof( char), 1, file_mv);
         while(!feof(file_mv)){
             //carga la memoria ram con el codigo de segmento
-            mv.memory[i] = abs(aux);
+
+            mv.memory[i] = aux;
             i++;
-            fread(&aux, sizeof(char), 1, file_mv);
+            fread(&aux, sizeof( char), 1, file_mv);
         }
         fclose(file_mv);
 
@@ -88,7 +89,21 @@ int main(int argc, char *argv[]) {
         //para mi aca va funcion de inicializa tabla
         mv.registers_table[0] = mv.segment_descriptor_table[0].base << 16; //corresponde a CS
         mv.registers_table[1] = 0x00010000 | mv.segment_descriptor_table[1].base; //corresponde a DS
+        mv.registers_table[2] = 0;
+        mv.registers_table[3] = 0;
+        mv.registers_table[4] = 0;
         mv.registers_table[5] = mv.segment_descriptor_table[0].base << 16; //corresponde a IP
+        mv.registers_table[6] = 0;
+        mv.registers_table[7] = 0;
+        mv.registers_table[8] = 0;
+        mv.registers_table[9] = 0;
+        mv.registers_table[10] = 0;
+        mv.registers_table[11] = 0;
+        mv.registers_table[12] = 0;
+        mv.registers_table[13] = 0;
+        mv.registers_table[14] = 0;
+        mv.registers_table[15] = 0;
+
         printf("%x DS\n", mv.registers_table[1]);
         //EJECUCION
         int ip = mv.segment_descriptor_table[0].base, j = 0, opB_content, opA_content;
@@ -101,7 +116,6 @@ int main(int argc, char *argv[]) {
      * error = 3 Division por Cero
      * error = -1 flag del STOP
      */
-
         int error = 0;
         printf("\n ANTES  DE EJECUCION \n");
         for (j  ; j < 80; j++) {
@@ -236,13 +250,13 @@ void dissasembler_func(struct  VM mv){
     int opA_size, opB_size, j, opA_content, opB_content, registro, offset;
     while(pos_act < mv.segment_descriptor_table[0].size) {
         /// [pos instruccion]  instrucciones en hexa | MNEM  OPA, OPB
-        printf("\n[%X] ",(char)  pos_act);
+        printf("\n[%X] ",(unsigned char)   pos_act);
 
         opB = (char) (((mv.memory[pos_act] & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
         opA = (char) ((mv.memory[pos_act] & 0b00110000) >> 4);
         cod_op = (char) (mv.memory[pos_act] & 0b00011111);
 
-        printf("%X ",(char)  mv.memory[pos_act]);
+        printf("%X ",(unsigned char)   mv.memory[pos_act]);
 
         opB_size = opB;
         opB_size ^= 0x03;
@@ -254,7 +268,7 @@ void dissasembler_func(struct  VM mv){
         while (j < opB_size) {
             pos_act += 1;
             opB_content = (opB_content | mv.memory[pos_act]) << 8;
-            printf("%X ", (char) mv.memory[pos_act]);
+            printf("%X ", (unsigned char)  mv.memory[pos_act]);
             j++;
         }
         opB_content >>= 8;
@@ -263,7 +277,7 @@ void dissasembler_func(struct  VM mv){
         while (j < opA_size) {
             pos_act += 1;
             opA_content = (opA_content | mv.memory[pos_act]) << 8;
-            printf("%X ",(char)  mv.memory[pos_act]);
+            printf("%X ",(unsigned char)  mv.memory[pos_act]);
             j++;
         }
         opA_content >>= 8;
@@ -280,7 +294,7 @@ void dissasembler_func(struct  VM mv){
                 break;
             }
             case 1: {    //inmediato
-                printf("%d", opA_content);
+                printf("%d", (short int)opA_content);
                 break;
             }
             case 2: {    //registro
@@ -299,7 +313,7 @@ void dissasembler_func(struct  VM mv){
                 break;
             }
             case 1: {    //inmediato
-                printf(", %d", opB_content);
+                printf(", %d", (short int)opB_content);
                 break;
             }
             case 2: {    //registro

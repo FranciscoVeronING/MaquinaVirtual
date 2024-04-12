@@ -289,6 +289,69 @@ void JMP(struct VM* mv, int opA_content, char opA, int *error){
         *error = 2; //caida de segmento
 }
 
+void JZ(struct VM* mv, int opA_content, char opA, int *error){
+    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
+    if( aux == 0x1) {
+        int value_A = value_op(opA_content, opA, *mv);
+        if (value_A < mv->segment_descriptor_table[0].size)
+            mv->registers_table[4] = (int) (value_A & 0x0000FFFF);
+        else
+            *error = 2; //caida de segmento
+    }
+}
+void JP(struct VM* mv, int opA_content, char opA, int *error){
+    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
+    if( aux == 0x0) {
+        int value_A = value_op(opA_content, opA, *mv);
+        if (value_A < mv->segment_descriptor_table[0].size)
+            mv->registers_table[4] = (int) (value_A & 0x0000FFFF);
+        else
+            *error = 2; //caida de segmento
+    }
+}
+
+void JN(struct VM* mv, int opA_content, char opA, int *error){
+    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
+    if( aux == 0x2) {
+        int value_A = value_op(opA_content, opA, *mv);
+        if (value_A < mv->segment_descriptor_table[0].size)
+            mv->registers_table[4] = (int) (value_A & 0x0000FFFF);
+        else
+            *error = 2; //caida de segmento
+    }
+}
+void JNZ(struct VM* mv, int opA_content, char opA, int *error){
+    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
+    if( aux == 0x2 || aux == 0x0) {
+        int value_A = value_op(opA_content, opA, *mv);
+        if (value_A < mv->segment_descriptor_table[0].size)
+            mv->registers_table[4] = (int) (value_A & 0x0000FFFF);
+        else
+            *error = 2; //caida de segmento
+    }
+}
+
+void JNP(struct VM* mv, int opA_content, char opA, int *error){
+    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
+    if( aux == 0x1 || aux == 0x2) {
+        int value_A = value_op(opA_content, opA, *mv);
+        if (value_A < mv->segment_descriptor_table[0].size)
+            mv->registers_table[4] = (int) (value_A & 0x0000FFFF);
+        else
+            *error = 2; //caida de segmento
+    }
+}
+
+void JNN(struct VM* mv, int opA_content, char opA, int *error){
+    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
+    if( aux == 0x1 || aux == 0x0) {
+        int value_A = value_op(opA_content, opA, *mv);
+        if (value_A < mv->segment_descriptor_table[0].size)
+            mv->registers_table[4] = (int) (value_A & 0x0000FFFF);
+        else
+            *error = 2; //caida de segmento
+    }
+}
 
 void STOP(int *error){
    *error =  -1;
@@ -451,6 +514,111 @@ void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB
         case 3:{
             printf("entra a SWAP");
             SWAP(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 4:{
+            printf("entra a MUL");
+            MUL(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 5:{
+            printf("entra a DIV");
+            DIV(mv,opA_content,opB_content,opA,opB, error);
+            break;
+        }
+        case 6:{
+            printf("entra a CMP");
+            CMP(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 7:{
+            printf("entra a SHL");
+            SHL(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 8:{
+            printf("entra a SHR");
+            SHR(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 9:{
+            printf("entra a AND");
+            AND(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 0xA:{
+            printf("entra a OR");
+            OR(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 0xB:{
+            printf("entra a XOR");
+            XOR(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 0xC:{
+            printf("entra a RND");
+            RND(mv,opA_content,opB_content,opA,opB);
+            break;
+        }
+        case 0x10:{
+            printf("entra a SYS");
+            SYS(mv, opB_content, opB_content,opA, opB);
+            break;
+        }
+        case 0x11:{
+            printf("entra a JMP");
+            JMP(mv,opB_content, opB, error);
+            break;
+        }
+        case 0x12:{
+            printf("entra a JZ");
+            JZ(mv,opB_content, opB, error);
+            break;
+        }
+        case 0x13:{
+            printf("entra a JP");
+            JP(mv,opB_content, opB, error);
+            break;
+        }
+        case 0x14:{
+            printf("entra a JN");
+            JN(mv,opB_content, opB, error);
+            break;
+        }
+        case 0x15:{
+            printf("entra a JNZ");
+            JNZ(mv,opB_content, opB, error);
+            break;
+        }
+        case 0x16:{
+            printf("entra a JNP");
+            JNP(mv,opB_content, opB, error);
+            break;
+        }
+        case 0x17:{
+            printf("entra a JNN");
+            JNN(mv,opB_content, opB, error);
+            break;
+        }
+        case 0x18:{
+            printf("entra a LDL");
+            LDL(mv,opB_content, opB);
+            break;
+        }
+        case 0x19:{
+            printf("entra a LDH");
+            LDH(mv,opB_content, opB);
+            break;
+        }
+        case 0x1A:{
+            printf("entra a NOT");
+            NOT(mv,opB_content, opB);
+            break;
+        }
+        case 0x1F:{
+            printf("entra a STOP");
+            STOP(error);
             break;
         }
 

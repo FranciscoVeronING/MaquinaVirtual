@@ -117,16 +117,15 @@ void SWAP(struct VM* mv, int opA_content, int opB_content , char opA, char opB) 
     // Obtenemos el valor del operando A y B
     int value_A = value_op(opA_content, opA, *mv);
     int value_B = value_op(opB_content, opB, *mv);
-
+    int pointer;
     if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
+        pointer = get_puntero(opA_content, *mv);
         set_memoria(pointer, value_B, mv);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_B, mv);
-
     if(opB == 0) { // Si el operando B es de memoria
-        int pointer = get_puntero(opB_content, *mv);
+        pointer = get_puntero(opB_content, *mv);
         set_memoria(pointer, value_A, mv);
     }
     else if(opB == 2)  // Si el operando B es un registro
@@ -421,7 +420,7 @@ int get_memoria(int pointer, struct VM mv){
    //printf("\n entro a get memoria \n");
     int value = 0;
     int index = pointer & 0x0000FFFF; //OFFSET
-    int aux = (pointer & 0xFFFF0000)>>16;
+    int aux = (int)(pointer & 0xFFFF0000)>>16;
     //printf("\n %x aux \n", aux);
     //printf("\n %x tabla de descriptores de segmento tamaño \n", mv.segment_descriptor_table[aux].size);
     if(index <= (mv.segment_descriptor_table[aux].size - 4)){
@@ -508,15 +507,15 @@ void set_registro(int op, int valor, struct VM* mv){
             break;
         }
         case 1:{
-            (*mv).registers_table[cod_reg] = ((*mv).registers_table[cod_reg] & 0xFFFFFF00) | valor; //se quieren mantener los 24 bits y modificar los ultimos 8 (caso AL)
+            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFFFF00) | valor; //se quieren mantener los 24 bits y modificar los ultimos 8 (caso AL)
             break;
         }
         case 2:{
-            (*mv).registers_table[cod_reg] = ((*mv).registers_table[cod_reg] & 0xFFFF00FF) | (valor << 8); // Caso modificar AH
+            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFF00FF) | (valor << 8); // Caso modificar AH
             break;
         }
         case 3:{
-            (*mv).registers_table[cod_reg] = ((*mv).registers_table[cod_reg] & 0xFFFF0000) | valor; //Caso modificar AX
+            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFF0000) | valor; //Caso modificar AX
             break;
         }
     }

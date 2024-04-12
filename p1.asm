@@ -1,6 +1,7 @@
 MOV [4], 15
 MOV [10], 40
-MUL [4], 5
-SUB [10], 10
-DIV [10], 4
-SWAP [4], [10]
+MOV EAX, 17
+MOV EDX, 20
+SWAP [10], EAX
+SWAP EAX, [10]
+SWAP [4],[10]

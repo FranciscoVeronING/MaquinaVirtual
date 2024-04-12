@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
         fread(&aux, sizeof(char), 1, file_mv);
         while(!feof(file_mv)){
             //carga la memoria ram con el codigo de segmento
-            mv.memory[i] = aux;
+            mv.memory[i] = abs(aux);
             i++;
             fread(&aux, sizeof(char), 1, file_mv);
         }
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
         //EJECUCION
         int ip = mv.segment_descriptor_table[0].base, j = 0, opB_content, opA_content;
         char pos_act = mv.memory[ip];
-        char opA, opB, cod_op, mask;
+        char opA, opB, cod_op;
         char opA_size, opB_size;
         /**
      * error = 1 Instruccion inválida
@@ -104,13 +104,13 @@ int main(int argc, char *argv[]) {
 
         int error = 0;
         printf("\n ANTES  DE EJECUCION \n");
-        for (int j = 0 ; j < 80; j++) {
+        for (j  ; j < 80; j++) {
             if(j%10 == 0)
                 printf("\n");
             printf("\t %d",mv.memory[j]);
         }
         printf("\n TABLA DE REGISTROS PA \n");
-        for (int j = 0 ; j < 16; j++) {
+        for (j = 0; j < 16; j++) {
             if(j%4 == 0)
                 printf("\n");
             printf("\t %X",mv.registers_table[j]);
@@ -236,13 +236,13 @@ void dissasembler_func(struct  VM mv){
     int opA_size, opB_size, j, opA_content, opB_content, registro, offset;
     while(pos_act < mv.segment_descriptor_table[0].size) {
         /// [pos instruccion]  instrucciones en hexa | MNEM  OPA, OPB
-        printf("\n[%X] ", pos_act);
+        printf("\n[%X] ",(char)  pos_act);
 
         opB = (char) (((mv.memory[pos_act] & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
         opA = (char) ((mv.memory[pos_act] & 0b00110000) >> 4);
         cod_op = (char) (mv.memory[pos_act] & 0b00011111);
 
-        printf("%X ", mv.memory[pos_act]);
+        printf("%X ",(char)  mv.memory[pos_act]);
 
         opB_size = opB;
         opB_size ^= 0x03;
@@ -254,7 +254,7 @@ void dissasembler_func(struct  VM mv){
         while (j < opB_size) {
             pos_act += 1;
             opB_content = (opB_content | mv.memory[pos_act]) << 8;
-            printf("%X ", mv.memory[pos_act]);
+            printf("%X ", (char) mv.memory[pos_act]);
             j++;
         }
         opB_content >>= 8;
@@ -263,7 +263,7 @@ void dissasembler_func(struct  VM mv){
         while (j < opA_size) {
             pos_act += 1;
             opA_content = (opA_content | mv.memory[pos_act]) << 8;
-            printf("%X ", mv.memory[pos_act]);
+            printf("%X ",(char)  mv.memory[pos_act]);
             j++;
         }
         opA_content >>= 8;

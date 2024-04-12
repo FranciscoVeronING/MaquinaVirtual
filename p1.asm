@@ -1,4 +1,6 @@
-MOV EDX, 40
-ADD [EDX+1], 12
-SUB [4], 1
-SWAP EDX, EAX
+MOV [4], 15
+MOV [10], 40
+MUL [4], 5
+SUB [10], 10
+DIV [10], 4
+SWAP [4], [10]

@@ -353,6 +353,32 @@ void JNN(struct VM* mv, int opA_content, char opA, int *error){
     }
 }
 
+void LDL(struct VM* mv, int opA_content, char opA){
+    int value = value_op(opA_content, opA, *mv);
+    mv->registers_table[9] = value  & 0x0000FFFF;
+
+}
+void LDH(struct VM* mv, int opA_content, char opA){
+    int value = value_op(opA_content, opA, *mv);
+    mv->registers_table[9] = value  << 16;
+}
+void NOT(struct VM* mv, int opA_content, char opA){             //PREGUNTAR
+    int value = value_op(opA_content, opA, *mv);
+    value = ~value;
+    if(opA == 0) { // Si el operando A es de memoria
+        int pointer = get_puntero(opA_content, *mv);
+        set_memoria(pointer, value, mv);
+    }
+    else if(opA == 2)  // Si el operando A es un registro
+        set_registro(opA,value, mv);
+
+    if(value < 0)
+        mv->registers_table[7] = 0X10000000;
+    else if(value == 0)
+        mv->registers_table[7] = 0x01000000;
+
+}
+
 void STOP(int *error){
    *error =  -1;
 };

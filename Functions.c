@@ -4,11 +4,13 @@
 #include <time.h>
 #include "Functions.h"
 
+void show_format_write(int acum, char format);
+
 void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB){
     switch (opA) {
         case 0b00: {
             printf("entro a set memoria ");
-            set_memoria(get_puntero(opA_content, *mv), value_op(opB_content, opB,*mv), mv);       //memoria
+            set_memoria(get_puntero(opA_content, *mv), value_op(opB_content, opB,*mv), mv, 4);       //memoria
             break;
         }
         case 0b10: {
@@ -29,7 +31,7 @@ void ADD(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_A, mv);
@@ -51,7 +53,7 @@ void SUB(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_A,mv);
@@ -73,7 +75,7 @@ void MUL(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_A,mv);
@@ -98,7 +100,7 @@ void DIV(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
         // Guardamos el valor resultante de vuelta en el operando A
         if (opA == 0) { // Si el operando A es de memoria
             int pointer = get_puntero(opA_content, *mv);
-            set_memoria(pointer, value_A, mv);
+            set_memoria(pointer, value_A, mv, 4);
         } else if (opA == 2)  // Si el operando A es un registro
             set_registro(opA, value_A, mv);
 
@@ -120,13 +122,13 @@ void SWAP(struct VM* mv, int opA_content, int opB_content , char opA, char opB) 
     int pointer;
     if(opA == 0) { // Si el operando A es de memoria
         pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_B, mv);
+        set_memoria(pointer, value_B, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_B, mv);
     if(opB == 0) { // Si el operando B es de memoria
         pointer = get_puntero(opB_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opB == 2)  // Si el operando B es un registro
         set_registro(opB,value_A, mv);
@@ -142,7 +144,7 @@ void AND(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_A,mv);
@@ -164,7 +166,7 @@ void OR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_A,mv);
@@ -186,7 +188,7 @@ void XOR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_A,mv);
@@ -222,7 +224,7 @@ void SHL(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_A,mv);
@@ -245,7 +247,7 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_A,mv);
@@ -257,6 +259,96 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         mv->registers_table[8] = 0x01000000;
 }
 
+void SYS(struct VM* mv, int value){
+    char format = (char)((*mv).registers_table[0xA] % 0x000000FF); // obtenemos el formato que esta en AL
+    char cant_cells = (char)((*mv).registers_table[0xC] & 0x000000FF);  // obtenemos la cantidad de celdas, esta en CL
+    char size_cells = (char)(((*mv).registers_table[0xC] >> 8) & 0x000000FF); //obtenemos el tamaño de las celdas, esta en CH
+    int aux=0, i = 0, acum = 0;
+    char aux1[100];
+    int index_segment = ((*mv).registers_table[0xD] >> 16) & 0x0000FFFF;
+    int index = (*mv).segment_descriptor_table[index_segment].base + ((*mv).registers_table[0xD] & 0x0000FFFF);
+    switch (value) {
+        case 1:{
+            printf("Ingrese el valor");
+            switch(format){
+                case 1:{
+                    scanf("%d", &aux);
+                    set_memoria(index, aux, mv, size_cells);
+
+                    break;
+                }
+                case 2:{
+                    scanf("%s", &aux1);
+                    aux = atoi(aux1);
+                    set_memoria(index, aux, mv, size_cells);
+                    break;
+                }
+                case 4:{
+                    scanf("%o", &aux);
+                    set_memoria(index, aux, mv, size_cells);
+                    break;
+                }
+                case 8:{
+                    scanf("%x", &aux);
+                    set_memoria(index, aux, mv, size_cells);
+                    break;
+                }
+
+            }
+
+            break;
+        }
+        case 2:{    ///CASO WRITE
+        /**
+         * muestra en pantalla los valores contenidos a partir de la posición de memoria apuntada \n
+         * por EDX, recuperando CL celdas de tamaño CH. El modo de escritura depende de la configuración \n
+         *  almacenada en AL con el siguiente formato: \n
+         *  %08 3 1: escribe hexadecimal \n
+         *  %04 2 1: escribe octal \n
+         *  %02 1 1: escribe caracteres \n
+         *   %01 0 1: escribe decimal \n
+         */
+
+            // se carga en index el valor donde apunta en memoria EDX xx xx cc cc
+            //  xx xx esta reservado para ubicacion del segmento
+            //  cc cc esta la direccion(offset) en donde esta los datos de EDX en memoria
+            for (int j = 0; j < cant_cells; j++) {
+                printf("[%X] \t", index);
+                acum = 0;
+                for (int k = 0; k < size_cells; k++) {      //se recupera cantidad de celda
+                    acum |= (*mv).memory[index] << 8; //se guarda el valor y se shiftea 1 byte a la izquierda
+                    index++;
+                }
+                acum >>= 8;
+                show_format_write(acum, format);
+                printf("\n");
+            }
+            break;
+        }
+    }
+}
+
+void show_format_write(int acum, char format) {
+    switch (format) {
+        case 0x1:{
+            printf("%d", acum);
+            break;
+        }
+        case 0x2:{
+            printf("%c", acum);
+            break;
+        }
+        case 0x4:{
+            printf("%o", acum);
+            break;
+        }
+        case 0x8:{
+            printf("%X", acum);
+        }
+    }
+}
+
+
 void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Obtenemos el valor del operando A y B
     int value_A = value_op(opA_content, opA, *mv);
@@ -267,7 +359,7 @@ void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv);
+        set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value_A,mv);
@@ -366,7 +458,7 @@ void NOT(struct VM* mv, int opA_content, char opA){             //PREGUNTAR
     value = ~value;
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value, mv);
+        set_memoria(pointer, value, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA,value, mv);
@@ -395,7 +487,7 @@ int get_puntero(int op_content,struct VM mv){
     printf(" \n %X este es pointer\n", pointer);
     return pointer;
 }
-
+/*
 void set_memoria(int pointer, int value, struct  VM* mv){
     /// el puntero tiene 2 bytes a codigo de segmento y 2 bytes de offset
     printf("estamos en set memoria\n");
@@ -412,6 +504,22 @@ void set_memoria(int pointer, int value, struct  VM* mv){
     index ++;
     (*mv).memory[index] = (char) (value & 0x000000ff);
        //printf("%x\t",((*mv).memory[index]));
+
+}
+*/
+
+void set_memoria(int pointer, int value, struct  VM* mv, int cant_bytes){
+    /// el puntero tiene 2 bytes a codigo de segmento y 2 bytes de offset
+    printf("estamos en set memoria\n");
+
+    int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
+    int aux = cant_bytes - 1;
+    for (int i = 0; i < cant_bytes ; ++i) {
+        (*mv).memory[index] = (char)(value >> (8 * aux));
+        aux --;
+        index ++;
+    }
+    //printf("%x\t",((*mv).memory[index]));
 
 }
 

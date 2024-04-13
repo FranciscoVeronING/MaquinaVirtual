@@ -1,2 +1,9 @@
 MOV [5],5
+MOV [10], [5]
+MOV EAX, 14
+MOV BX, 3
+MOV CH, 2
+MOV DL, 4
+MOV EEX, EAX
+MOV [EAX+1], 4
 SWAP EAX,[5]

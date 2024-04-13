@@ -1,23 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Functions.h"
 #include "maquina_virtual.h"
 #include "Functions.c"
 #include "maquina_virtual.c"
-
-
-
-/**
-typedef struct segments_descriptors{
-    short int base, size;
-};
-
-char memory[MEMORY_SIZE];
-*/
-int get_seccion_reg( struct VM mv, int op_content);
-void extract_op(int op_content, char *cod_reg, short int *offset);
-void load_memory(FILE * file_mv, struct VM mv);
 
 void carga_regs(char regs_tags[0x40][4]);
 void carga_nemonics(char nemonicos_tags[0x20][5]);
@@ -25,6 +11,8 @@ void carga_nemonics(char nemonicos_tags[0x20][5]);
 int get_registro(int op, struct VM mv);
 void set_registro(int op, int valor, struct VM* mv);
 void dissasembler_func(struct  VM mv);
+
+void set_registers_table(struct VM *pVm);
 
 int main(int argc, char *argv[]) {
 /// arg[0] = .exe; arg([1] .vmx
@@ -77,37 +65,19 @@ int main(int argc, char *argv[]) {
 
         scanf("%c",&aux);
 
-//carga de Tabla de descriptores de segmento
+        //carga de Tabla de descriptores de segmento
         mv.segment_descriptor_table[0].base = 0x0000;
         mv.segment_descriptor_table[0].size = size_cs;
         mv.segment_descriptor_table[1].base = size_cs;
         mv.segment_descriptor_table[1].size = MEMORY_SIZE - size_cs;
-
-
         //Se inicializa tabla de registros
+        set_registers_table(&mv);
+       // printf("%x DS\n", mv.registers_table[1]);
+       ///EJECUCION
 
-        //para mi aca va funcion de inicializa tabla
-        mv.registers_table[0] = mv.segment_descriptor_table[0].base << 16; //corresponde a CS
-        mv.registers_table[1] = 0x00010000 | mv.segment_descriptor_table[1].base; //corresponde a DS
-        mv.registers_table[2] = 0;
-        mv.registers_table[3] = 0;
-        mv.registers_table[4] = 0;
-        mv.registers_table[5] = mv.segment_descriptor_table[0].base << 16; //corresponde a IP
-        mv.registers_table[6] = 0;
-        mv.registers_table[7] = 0;
-        mv.registers_table[8] = 0;
-        mv.registers_table[9] = 0;
-        mv.registers_table[10] = 0;
-        mv.registers_table[11] = 0;
-        mv.registers_table[12] = 0;
-        mv.registers_table[13] = 0;
-        mv.registers_table[14] = 0;
-        mv.registers_table[15] = 0;
-
-        printf("%x DS\n", mv.registers_table[1]);
-        //EJECUCION
-        int ip = mv.segment_descriptor_table[0].base, j = 0, opB_content, opA_content;
-        char pos_act = mv.memory[ip];
+        int ip = mv.segment_descriptor_table[0].base;
+        int j = 0, opB_content, opA_content;
+        char pos_act;
         char opA, opB, cod_op;
         char opA_size, opB_size;
         /**
@@ -117,21 +87,11 @@ int main(int argc, char *argv[]) {
      * error = -1 flag del STOP
      */
         int error = 0;
-        printf("\n ANTES  DE EJECUCION \n");
-        for (j  ; j < 80; j++) {
-            if(j%10 == 0)
-                printf("\n");
-            printf("\t %d",mv.memory[j]);
-        }
-        printf("\n TABLA DE REGISTROS PA \n");
-        for (j = 0; j < 16; j++) {
-            if(j%4 == 0)
-                printf("\n");
-            printf("\t %X",mv.registers_table[j]);
-        }
+        mv.registers_table[5] = mv.memory[ip]; //se incicaliza IP
         while(ip < mv.segment_descriptor_table[0].size && error == 0) {
-            printf(" \n %X este es el contenido de pos act\n", pos_act);
+            printf(" \n %X este es el contenido de pos act\n", mv.registers_table[5]);
             //carga de operandos
+            pos_act = (char)mv.registers_table[5];
             opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
             opA = (char)((pos_act & 0b00110000) >> 4);
             cod_op = (char)(pos_act & 0b00011111);
@@ -151,14 +111,20 @@ int main(int argc, char *argv[]) {
             j = 0;
             while (j < opB_size) {
                 ip+= 1;
-                opB_content = (opB_content | mv.memory[ip]) << 8;
+                mv.registers_table[5] = mv.memory[ip]; //nuevo
+                pos_act = (char)mv.registers_table[5]; //nuevo
+                //opB_content = (opB_content | mv.memory[ip]) << 8;
+                opB_content = (opB_content | pos_act) << 8;
                 j++;
             }
             opB_content >>= 8;
             j = 0;
             while (j < opA_size) {
                 ip+= 1;
-                opA_content = (opA_content | mv.memory[ip]) << 8;
+                mv.registers_table[5] = mv.memory[ip]; //nuevo
+                pos_act = (char)mv.registers_table[5]; //nuevo
+                //opA_content = (opA_content | mv.memory[ip]) << 8;
+                opA_content = (opA_content | pos_act) << 8;
                 j++;
             }
             opA_content >>= 8;
@@ -190,9 +156,11 @@ int main(int argc, char *argv[]) {
             //Se actualiza IP
 
             ip += 1;
-            pos_act = mv.memory[ip];
-            int aux = mv.registers_table[5] & 0xffff0000;
-            mv.registers_table[5] = aux | pos_act;
+            mv.registers_table[5] = mv.memory[ip] ; //nuevo
+            pos_act = (char)mv.registers_table[5]; //nuevo
+           // pos_act = mv.memory[ip];
+            //int aux = mv.registers_table[5] & 0xffff0000;
+            //mv.registers_table[5] = aux | pos_act;
 
             printf("\n DESUPUES  DE EJECUCION \n");
             for (int j = 0 ; j <80 ; j++) {
@@ -230,9 +198,27 @@ int main(int argc, char *argv[]) {
 
 }
 
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+void set_registers_table(struct VM *mv) {
+    (*mv).registers_table[0] = (*mv).segment_descriptor_table[0].base << 16; //corresponde a CS
+    (*mv).registers_table[1] = 0x00010000 | (*mv).segment_descriptor_table[1].base; //corresponde a DS
+    (*mv).registers_table[2] = 0;
+    (*mv).registers_table[3] = 0;
+    (*mv).registers_table[4] = 0;
+    (*mv).registers_table[5] = (*mv).segment_descriptor_table[0].base << 16; //corresponde a IP
+    (*mv).registers_table[6] = 0;
+    (*mv).registers_table[7] = 0;
+    (*mv).registers_table[8] = 0;
+    (*mv).registers_table[9] = 0;
+    (*mv).registers_table[10] = 0;
+    (*mv).registers_table[11] = 0;
+    (*mv).registers_table[12] = 0;
+    (*mv).registers_table[13] = 0;
+    (*mv).registers_table[14] = 0;
+    (*mv).registers_table[15] = 0;
+}
 
 
 void dissasembler_func(struct  VM mv){

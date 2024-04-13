@@ -482,8 +482,7 @@ int get_puntero(int op_content,struct VM mv){
    // printf("\n %x codigo de regstro en setpuntero\n",index);
     pointer = mv.registers_table[index];
    // printf(" \n %X este es pointer\n", pointer);
-    pointer += (op_content & 0x00FFFF);
-
+    pointer  += (op_content & 0x00FFFF);
     printf(" \n %X este es pointer\n", pointer);
     return pointer;
 }
@@ -511,6 +510,8 @@ void set_memoria(int pointer, int value, struct  VM* mv){
 void set_memoria(int pointer, int value, struct  VM* mv, int cant_bytes){
     /// el puntero tiene 2 bytes a codigo de segmento y 2 bytes de offset
     printf("estamos en set memoria\n");
+    printf("%04X  puntero\n",pointer);
+    printf("%04X  valor\n", value);
 
     int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
     int aux = cant_bytes - 1;
@@ -519,7 +520,8 @@ void set_memoria(int pointer, int value, struct  VM* mv, int cant_bytes){
         aux --;
         index ++;
     }
-    //printf("%x\t",((*mv).memory[index]));
+    index--;
+    printf("%x\t",((*mv).memory[index]));
 
 }
 
@@ -532,13 +534,14 @@ int get_memoria(int pointer, struct VM mv){
     //printf("\n %x aux \n", aux);
     //printf("\n %x tabla de descriptores de segmento tamaño \n", mv.segment_descriptor_table[aux].size);
     if(index <= (mv.segment_descriptor_table[aux].size - 4)){
-        value = (int)(mv).memory[index];
+
+        value = (int)(mv).memory[index] << 8;
         index+=1;
         value |= (mv).memory[index] << 8;
         index+=1;
-        value |= (mv).memory[index] << 16;
+        value |= (mv).memory[index] << 8;
         index+=1;
-        value |= (mv).memory[index] << 24;
+        value |= (mv).memory[index];
     }
     else{
         perror("te caiste del segmento pa");
@@ -547,18 +550,14 @@ int get_memoria(int pointer, struct VM mv){
     return value;
 }
 
-void extract_op(int op_content, char *cod_reg, short int *offset){
-    int mask = 0x000F0000;
-    *cod_reg = (char)((op_content & mask)>>16);
-    *offset = (short int)(op_content & 0x0000FFFF);
-}
+
 
 int value_op(int op_content, char op_type, struct VM mv){  //obtiene el valor del operando
     int value;
     switch(op_type){
         case 0: {   //caso de memoria
             //printf("\n entro a value_op caso memoria\n");
-            char code_reg = (char) ((op_content & 0x0F0000) >> 16);
+            char code_reg = (char) ((op_content >> 16) & 0x00000F);
             //printf("\n %x codigo de registro \n", code_reg);
             int offset_1 = op_content & 0x00FFFF;
             //printf("\n %x offset 1 \n", offset_1);
@@ -697,11 +696,11 @@ void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB
             RND(mv,opA_content,opB_content,opA,opB);
             break;
         }
-       /* case 0x10:{
+        case 0x10:{
             printf("entra a SYS");
-            SYS(mv, opB_content, opB_content,opA, opB);
+            SYS(mv, opB_content);
             break;
-        } */
+        }
         case 0x11:{
             printf("entra a JMP");
             JMP(mv,opB_content, opB, error);

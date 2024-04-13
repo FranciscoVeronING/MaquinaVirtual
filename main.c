@@ -86,6 +86,9 @@ int main(int argc, char *argv[]) {
      * error = 3 Division por Cero
      * error = -1 flag del STOP
      */
+        if(dissasembler)
+            dissasembler_func(mv);
+
         int error = 0;
         mv.registers_table[5] = mv.memory[ip]; //se incicaliza IP
         while(ip < mv.segment_descriptor_table[0].size && error == 0) {
@@ -152,50 +155,30 @@ int main(int argc, char *argv[]) {
             * analizar el contenido de cada tipo de operando(registro, inmediato, memoria)\n
             */
             llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error);
-           // printf("paso mov");
             //Se actualiza IP
 
             ip += 1;
             mv.registers_table[5] = mv.memory[ip] ; //nuevo
-            pos_act = (char)mv.registers_table[5]; //nuevo
            // pos_act = mv.memory[ip];
             //int aux = mv.registers_table[5] & 0xffff0000;
             //mv.registers_table[5] = aux | pos_act;
 
             printf("\n DESUPUES  DE EJECUCION \n");
-            for (int j = 0 ; j <80 ; j++) {
+            for (int j = 0 ; j <120 ; j++) {
                 if(j%10 == 0)
                     printf("\n");
-                printf("\t %d",mv.memory[j]);
+                printf("\t %02X",mv.memory[j]);
             }
             printf("\n TABLA DE REGISTROS PA \n");
             for (int j = 0 ; j < 16; j++) {
                 if(j%4 == 0)
                     printf("\n");
-                printf("\t %X",mv.registers_table[j]);
+                printf("\t %08X",mv.registers_table[j]);
             }
-
-
-
             }
         }
-    printf("\n DESUPUES  DE EJECUCION \n");
-    for (int j = 0 ; j <80 ; j++) {
-        if(j%10 == 0)
-            printf("\n");
-        printf("\t %d",mv.memory[j]);
-    }
-    printf("\n TABLA DE REGISTROS PA \n");
-    for (int j = 0 ; j < 16; j++) {
-        if(j%4 == 0)
-            printf("\n");
-        printf("\t %X",mv.registers_table[j]);
-    }
-
-    if(dissasembler)
-        dissasembler_func(mv);
-
-
+    /*if(dissasembler)
+        dissasembler_func(mv);*/
 }
 
 
@@ -222,27 +205,23 @@ void set_registers_table(struct VM *mv) {
 
 
 void dissasembler_func(struct  VM mv){
-    int i=0;
-    while(i<mv.segment_descriptor_table[0].size) {
-        printf("%X ", mv.memory[i]);
-        i++;
-    }
+
     char regs_tags[0x40][4];
     char nemonicos_tags[0X20][5];
     carga_regs(regs_tags);
     carga_nemonics(nemonicos_tags);
-    char pos_act = mv.segment_descriptor_table[0].base;
+    unsigned char pos_act = ( unsigned char) (mv.segment_descriptor_table[0].base);
     char opA, opB, cod_op;
     int opA_size, opB_size, j, opA_content, opB_content, registro, offset;
     while(pos_act < mv.segment_descriptor_table[0].size) {
         /// [pos instruccion]  instrucciones en hexa | MNEM  OPA, OPB
-        printf("\n[%X] ",(unsigned char)   pos_act);
+        printf("\n[%04X] ",(unsigned char)   pos_act);
 
         opB = (char) (((mv.memory[pos_act] & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
         opA = (char) ((mv.memory[pos_act] & 0b00110000) >> 4);
         cod_op = (char) (mv.memory[pos_act] & 0b00011111);
 
-        printf("%X ",(unsigned char)   mv.memory[pos_act]);
+        printf("%02X ",(unsigned char)   mv.memory[pos_act]);
 
         opB_size = opB;
         opB_size ^= 0x03;
@@ -254,7 +233,7 @@ void dissasembler_func(struct  VM mv){
         while (j < opB_size) {
             pos_act += 1;
             opB_content = (opB_content | mv.memory[pos_act]) << 8;
-            printf("%X ", (unsigned char)  mv.memory[pos_act]);
+            printf("%02X ", (unsigned char)  mv.memory[pos_act]);
             j++;
         }
         opB_content >>= 8;
@@ -263,11 +242,17 @@ void dissasembler_func(struct  VM mv){
         while (j < opA_size) {
             pos_act += 1;
             opA_content = (opA_content | mv.memory[pos_act]) << 8;
-            printf("%X ",(unsigned char)  mv.memory[pos_act]);
+            printf("%02X ",(unsigned char)  mv.memory[pos_act]);
             j++;
         }
         opA_content >>= 8;
+        int cant = opB_size + opA_size + 1;
+        while(cant <= 7){
+            printf("    ");
+            cant++;
+        }
         printf("\t | %s \t ", nemonicos_tags[cod_op]);
+
 
         switch (opA) {
             case 0: {    //memoria

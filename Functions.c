@@ -10,7 +10,8 @@ void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB){
     switch (opA) {
         case 0b00: {
             printf("entro a set memoria ");
-            set_memoria(get_puntero(opA_content, *mv), value_op(opB_content, opB,*mv), mv, 4);       //memoria
+            int pointer =  get_puntero(opA_content, *mv);
+            set_memoria(pointer, value_op(opB_content, opB,*mv), mv, 4);       //memoria
             break;
         }
         case 0b10: {
@@ -27,14 +28,14 @@ void ADD(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     int value_B = value_op(opB_content, opB, *mv);
 
     value_A += value_B;
-
+    printf("%08X",value_A);
     // Guardamos el valor resultante de vuelta en el operando A
     if(opA == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(opA_content, *mv);
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_A, mv);
+        set_registro(opA_content,value_A, mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -56,7 +57,7 @@ void SUB(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_A,mv);
+        set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -78,7 +79,7 @@ void MUL(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_A,mv);
+        set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -102,7 +103,7 @@ void DIV(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
             int pointer = get_puntero(opA_content, *mv);
             set_memoria(pointer, value_A, mv, 4);
         } else if (opA == 2)  // Si el operando A es un registro
-            set_registro(opA, value_A, mv);
+            set_registro(opA_content, value_A, mv);
 
         //cambiamos el valor del CC(condition code
         if(value_A < 0)
@@ -125,13 +126,13 @@ void SWAP(struct VM* mv, int opA_content, int opB_content , char opA, char opB) 
         set_memoria(pointer, value_B, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_B, mv);
+        set_registro(opA_content,value_B, mv);
     if(opB == 0) { // Si el operando B es de memoria
         pointer = get_puntero(opB_content, *mv);
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opB == 2)  // Si el operando B es un registro
-        set_registro(opB,value_A, mv);
+        set_registro(opB_content,value_A, mv);
 }
 
 void AND(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
@@ -147,7 +148,7 @@ void AND(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_A,mv);
+        set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -169,7 +170,7 @@ void OR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_A,mv);
+        set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -191,7 +192,7 @@ void XOR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_A,mv);
+        set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -227,7 +228,7 @@ void SHL(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_A,mv);
+        set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -250,7 +251,7 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_A,mv);
+        set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -362,7 +363,7 @@ void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         set_memoria(pointer, value_A, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value_A,mv);
+        set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -461,7 +462,7 @@ void NOT(struct VM* mv, int opA_content, char opA){             //PREGUNTAR
         set_memoria(pointer, value, mv, 4);
     }
     else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA,value, mv);
+        set_registro(opA_content,value, mv);
 
     if(value < 0)
         mv->registers_table[8] = 0X10000000;
@@ -480,7 +481,10 @@ int get_puntero(int op_content,struct VM mv){
     ///00000 relleno xxxx cod_reg  yyyyyyyy yyyyyyyy offset
     char index = (char)((op_content >> 16) & 0x0F); // cod registro
    // printf("\n %x codigo de regstro en setpuntero\n",index);
-    pointer = mv.registers_table[index];
+   if (index == 1)
+        pointer = mv.registers_table[index];
+   else
+       pointer = mv.segment_descriptor_table[1].base + mv.registers_table[index];
    // printf(" \n %X este es pointer\n", pointer);
     pointer  += (op_content & 0x00FFFF);
     printf(" \n %X este es pointer\n", pointer);
@@ -510,7 +514,7 @@ void set_memoria(int pointer, int value, struct  VM* mv){
 void set_memoria(int pointer, int value, struct  VM* mv, int cant_bytes){
     /// el puntero tiene 2 bytes a codigo de segmento y 2 bytes de offset
     printf("estamos en set memoria\n");
-    printf("%04X  puntero\n",pointer);
+    printf("%08X  puntero\n",pointer);
     printf("%04X  valor\n", value);
 
     int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
@@ -557,14 +561,18 @@ int value_op(int op_content, char op_type, struct VM mv){  //obtiene el valor de
     switch(op_type){
         case 0: {   //caso de memoria
             //printf("\n entro a value_op caso memoria\n");
+            int pointer= 0;
             char code_reg = (char) ((op_content >> 16) & 0x00000F);
             //printf("\n %x codigo de registro \n", code_reg);
             int offset_1 = op_content & 0x00FFFF;
             //printf("\n %x offset 1 \n", offset_1);
             int offset_2 = mv.registers_table[code_reg] & 0x0000FFFF;
            // printf("\n %x offset 2 \n", offset_2);
-            int pointer = (int)((mv.registers_table[code_reg] & 0xFFFF0000) + (offset_1 + offset_2));
+           if (code_reg == 1)
+             pointer = (int)((mv.registers_table[code_reg] & 0xFFFF0000) + (offset_1 + offset_2));
             //printf("\n %x pointer \n", pointer);
+           else
+               pointer = (int)(  0x00010000 + mv.segment_descriptor_table[1].base + (offset_1+ offset_2));
             value = get_memoria(pointer, mv);
             break;
         }
@@ -592,7 +600,7 @@ int get_registro(int op, struct VM mv){ //obtiene el valor de un registro
             break;
         }
         case 2:{
-            valor = mv.registers_table[cod_reg] & 0xFF00;
+            valor = (mv.registers_table[cod_reg] & 0xFF00)>>8;
             break;
         }
         case 3:{

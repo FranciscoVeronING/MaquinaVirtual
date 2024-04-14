@@ -38,6 +38,7 @@ void set_registro(int op, int valor, struct VM* mv);
 int get_registro(int pointer, struct VM mv);
 int value_op(int op_content, char op_type, struct VM mv);
 int get_puntero(int opA_content,struct VM mv);
+void Errores(int error);
 /**
  *
  * @param functions tabla de 24 funciones

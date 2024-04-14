@@ -56,8 +56,9 @@ void SUB(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
         int pointer = get_puntero(opA_content, *mv);
         set_memoria(pointer, value_A, mv, 4);
     }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_A,mv);
+    else
+        if(opA == 2)  // Si el operando A es un registro
+            set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
@@ -764,6 +765,21 @@ void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB
             STOP(error);
             break;
         }
-
+    }
+}
+void Errores(int error){
+    switch(error){
+        case 1: {
+            printf("\nError: Instruccion invalida");
+            break;
+        }
+        case 2: {
+            printf("\nError: Caida de segmento");
+            break;
+        }
+        case 3: {
+            printf("\nError: Division por Cero");
+            break;
+        }
     }
 }

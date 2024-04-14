@@ -14,6 +14,7 @@ void dissasembler_func(struct  VM mv);
 
 void set_registers_table(struct VM *pVm);
 
+
 int main(int argc, char *argv[]) {
 /// arg[0] = .exe; arg([1] .vmx
     // Abrir el archivo en modo de lectura binaria
@@ -174,9 +175,12 @@ int main(int argc, char *argv[]) {
                 if(j%4 == 0)
                     printf("\n");
                 printf("\t %08X",mv.registers_table[j]);
-            }
+
             }
         }
+        Errores(error);
+    }
+
     /*if(dissasembler)
         dissasembler_func(mv);*/
 }

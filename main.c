@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
                 pos_act = (char) mv.registers_table[5]; //nuevo
                 //opB_content = (opB_content | mv.memory[ip]) << 8;
 
-                opB_content += pos_act;
+                opB_content += (unsigned char)pos_act;
                 printf(" \n %08X este es opBcontent\n", opB_content);
                 opB_content<<= 8;
                 printf(" \n %08X este es opBcontent\n", opB_content);
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
                 mv.registers_table[5] = mv.memory[ip]; //nuevo
                 pos_act = (char)mv.registers_table[5]; //nuevo
                 //opA_content = (opA_content | mv.memory[ip]) << 8
-                opA_content =(opA_content | pos_act) << 8;
+                opA_content =(opA_content | (unsigned char)pos_act) << 8;
                 j++;
             }
             opA_content >>= 8;

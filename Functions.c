@@ -39,9 +39,9 @@ void ADD(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 void SUB(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
@@ -62,9 +62,9 @@ void SUB(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 void MUL(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
@@ -84,9 +84,9 @@ void MUL(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 void DIV(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
@@ -108,9 +108,9 @@ void DIV(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
 
         //cambiamos el valor del CC(condition code
         if(value_A < 0)
-            mv->registers_table[8] = 0X10000000;
+            mv->registers_table[8] = 0X80000000;
         else if(value_A == 0)
-            mv->registers_table[8] = 0x01000000;
+            mv->registers_table[8] = 0x40000000;
     } else
         *error = 3;
 
@@ -153,9 +153,9 @@ void AND(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 void OR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
@@ -175,9 +175,9 @@ void OR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 void XOR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
@@ -197,9 +197,9 @@ void XOR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 void CMP(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
@@ -210,9 +210,9 @@ void CMP(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
     value_A -= value_B;
     //cambiamos el valor del CC(condition code)
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 void SHL(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
@@ -233,9 +233,9 @@ void SHL(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
@@ -256,19 +256,19 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 void SYS(struct VM* mv, int value){
     char format = (char)((*mv).registers_table[0xA] % 0x000000FF); // obtenemos el formato que esta en AL
     char cant_cells = (char)((*mv).registers_table[0xC] & 0x000000FF);  // obtenemos la cantidad de celdas, esta en CL
     char size_cells = (char)(((*mv).registers_table[0xC] >> 8) & 0x000000FF); //obtenemos el tamaño de las celdas, esta en CH
-    int aux=0, i = 0, acum = 0;
+    int aux=0, acum;
     char aux1[100];
-    int index_segment = ((*mv).registers_table[0xD] >> 16) & 0x0000FFFF;
-    int index = (*mv).segment_descriptor_table[index_segment].base + ((*mv).registers_table[0xD] & 0x0000FFFF);
+    //char index_segment = (char) (((*mv).registers_table[0xD] >> 16) & 0x0000FFFF);
+    int index = (*mv).registers_table[0xD];
     switch (value) {
         case 1:{
             printf("Ingrese el valor");
@@ -280,9 +280,11 @@ void SYS(struct VM* mv, int value){
                     break;
                 }
                 case 2:{
-                    scanf("%s", &aux1);
-                    aux = atoi(aux1);
-                    set_memoria(index, aux, mv, size_cells);
+                    scanf("%s", aux1);
+                    for(int i=0; i<cant_cells; i++){
+                        set_memoria(index, aux1[i], mv, 1);
+                        index++;
+                    }
                     break;
                 }
                 case 4:{
@@ -295,9 +297,7 @@ void SYS(struct VM* mv, int value){
                     set_memoria(index, aux, mv, size_cells);
                     break;
                 }
-
             }
-
             break;
         }
         case 2:{    ///CASO WRITE
@@ -314,6 +314,7 @@ void SYS(struct VM* mv, int value){
             // se carga en index el valor donde apunta en memoria EDX xx xx cc cc
             //  xx xx esta reservado para ubicacion del segmento
             //  cc cc esta la direccion(offset) en donde esta los datos de EDX en memoria
+            index = index & 0x0000FFFF;
             for (int j = 0; j < cant_cells; j++) {
                 printf("[%X] \t", index);
                 acum = 0;
@@ -368,79 +369,94 @@ void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB) {
 
     //cambiamos el valor del CC(condition code
     if(value_A < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value_A == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 }
 
 
-void JMP(struct VM* mv, int opA_content, char opA, int *error){
+void JMP(struct VM* mv, int opA_content, char opA, int *error, int *flag){
     int value_A = value_op(opA_content, opA, *mv);
-    if(value_A < mv->segment_descriptor_table[0].size)
-        mv->registers_table[5]  = (int)(value_A & 0x0000FFFF);
+    if(value_A < mv->segment_descriptor_table[0].size) {
+        mv->registers_table[5] = (int) (value_A & 0x0000FFFF);
+        *flag = 1;
+    }
     else
         *error = 2; //caida de segmento
 }
 
-void JZ(struct VM* mv, int opA_content, char opA, int *error){
+void JZ(struct VM* mv, int opB_content, char opB, int *error, int *flag){
     int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x1) {
-        int value_A = value_op(opA_content, opA, *mv);
-        if (value_A < mv->segment_descriptor_table[0].size)
-            mv->registers_table[5] = (int) (value_A & 0x0000FFFF);
+    if( mv->registers_table[8] == 0x40000000) {
+        printf("\n ENTRE AL IF DE JZ PAPA");
+        int value_B = value_op(opB_content, opB, *mv);
+        if (value_B < mv->segment_descriptor_table[0].size){
+            (*mv).registers_table[5] = value_B;
+            *flag = 1;
+        }
         else
             *error = 2; //caida de segmento
     }
 }
-void JP(struct VM* mv, int opA_content, char opA, int *error){
+void JP(struct VM* mv, int opB_content, char opB, int *error, int *flag){
     int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x0) {
-        int value_A = value_op(opA_content, opA, *mv);
-        if (value_A < mv->segment_descriptor_table[0].size)
-            mv->registers_table[5] = (int) (value_A & 0x0000FFFF);
-        else
-            *error = 2; //caida de segmento
-    }
-}
-
-void JN(struct VM* mv, int opA_content, char opA, int *error){
-    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x2) {
-        int value_A = value_op(opA_content, opA, *mv);
-        if (value_A < mv->segment_descriptor_table[0].size)
-            mv->registers_table[5] = (int) (value_A & 0x0000FFFF);
-        else
-            *error = 2; //caida de segmento
-    }
-}
-void JNZ(struct VM* mv, int opA_content, char opA, int *error){
-    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x2 || aux == 0x0) {
-        int value_A = value_op(opA_content, opA, *mv);
-        if (value_A < mv->segment_descriptor_table[0].size)
-            mv->registers_table[5] = (int) (value_A & 0x0000FFFF);
+    if((char) aux == 0x0) {
+        int value_B = value_op(opB_content, opB, *mv);
+        if (value_B < mv->segment_descriptor_table[0].size){
+            (*mv).registers_table[5] = value_B;
+            *flag = 1;
+        }
         else
             *error = 2; //caida de segmento
     }
 }
 
-void JNP(struct VM* mv, int opA_content, char opA, int *error){
+void JN(struct VM* mv, int opB_content, char opB, int *error, int *flag){
     int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x1 || aux == 0x2) {
-        int value_A = value_op(opA_content, opA, *mv);
-        if (value_A < mv->segment_descriptor_table[0].size)
-            mv->registers_table[5] = (int) (value_A & 0x0000FFFF);
+    if( aux == 0x8) {
+        int value_B = value_op(opB_content, opB, *mv);
+        if (value_B < mv->segment_descriptor_table[0].size){
+            (*mv).registers_table[5] = value_B;
+            *flag = 1;
+        }
+        else
+            *error = 2; //caida de segmento
+    }
+}
+void JNZ(struct VM* mv, int opB_content, char opB, int *error, int *flag){
+    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
+    if( aux == 0x8 || aux == 0x0) {
+        int value_B = value_op(opB_content, opB, *mv);
+        if (value_B < mv->segment_descriptor_table[0].size){
+            (*mv).registers_table[5] = value_B;
+            *flag = 1;
+        }
         else
             *error = 2; //caida de segmento
     }
 }
 
-void JNN(struct VM* mv, int opA_content, char opA, int *error){
+void JNP(struct VM* mv, int opB_content, char opB, int *error, int *flag){
     int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x1 || aux == 0x0) {
-        int value_A = value_op(opA_content, opA, *mv);
-        if (value_A < mv->segment_descriptor_table[0].size)
-            mv->registers_table[5] = (int) (value_A & 0x0000FFFF);
+    if( aux == 0x4 || aux == 0x8) {
+        int value_B = value_op(opB_content, opB, *mv);
+        if (value_B < mv->segment_descriptor_table[0].size){
+            (*mv).registers_table[5] = value_B;
+            *flag = 1;
+        }
+        else
+            *error = 2; //caida de segmento
+    }
+}
+
+void JNN(struct VM* mv, int opB_content, char opB, int *error, int *flag){
+    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
+    if( aux == 0x4 || aux == 0x0) {
+        int value_B = value_op(opB_content, opB, *mv);
+        if (value_B < mv->segment_descriptor_table[0].size){
+            (*mv).registers_table[5] = value_B;
+            *flag = 1;
+        }
         else
             *error = 2; //caida de segmento
     }
@@ -466,9 +482,9 @@ void NOT(struct VM* mv, int opA_content, char opA){             //PREGUNTAR
         set_registro(opA_content,value, mv);
 
     if(value < 0)
-        mv->registers_table[8] = 0X10000000;
+        mv->registers_table[8] = 0X80000000;
     else if(value == 0)
-        mv->registers_table[8] = 0x01000000;
+        mv->registers_table[8] = 0x40000000;
 
 }
 
@@ -619,6 +635,7 @@ void set_registro(int op, int valor, struct VM* mv){
     cod_reg = op & 0xF;             //almacena el registro
     switch (sec_reg) {
         case 0:{
+            printf("TIENE QUE ENTRAR ACA %d", valor);
             (*mv).registers_table[cod_reg] = valor; //Caso EAX
             break;
         }
@@ -637,7 +654,7 @@ void set_registro(int op, int valor, struct VM* mv){
     }
 }
 
-void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB_content, char cod_op, int *error){
+void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB_content, char cod_op, int *error, int *flag){
 
     switch (cod_op) {
         case 0:{
@@ -712,37 +729,37 @@ void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB
         }
         case 0x11:{
             printf("entra a JMP");
-            JMP(mv,opB_content, opB, error);
+            JMP(mv,opB_content, opB, error, flag);
             break;
         }
         case 0x12:{
             printf("entra a JZ");
-            JZ(mv,opB_content, opB, error);
+            JZ(mv,opB_content, opB, error, flag);
             break;
         }
         case 0x13:{
             printf("entra a JP");
-            JP(mv,opB_content, opB, error);
+            JP(mv,opB_content, opB, error, flag);
             break;
         }
         case 0x14:{
             printf("entra a JN");
-            JN(mv,opB_content, opB, error);
+            JN(mv,opB_content, opB, error, flag);
             break;
         }
         case 0x15:{
             printf("entra a JNZ");
-            JNZ(mv,opB_content, opB, error);
+            JNZ(mv,opB_content, opB, error, flag);
             break;
         }
         case 0x16:{
             printf("entra a JNP");
-            JNP(mv,opB_content, opB, error);
+            JNP(mv,opB_content, opB, error, flag);
             break;
         }
         case 0x17:{
             printf("entra a JNN");
-            JNN(mv,opB_content, opB, error);
+            JNN(mv,opB_content, opB, error, flag);
             break;
         }
         case 0x18:{

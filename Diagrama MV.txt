@@ -82,3 +82,6 @@ Ir a 5. hasta encontrar FF o que IP apuenta fuera de CS
 mov(mv,op1,op2(o arreglo de op[]);--> llego con vector de funciones
 setOp(mv, op1, getop(op2)(int 32));
 
+
+
+/// Main 117, error en lectura de inmediato mayor a 1 byte

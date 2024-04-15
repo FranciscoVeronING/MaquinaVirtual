@@ -21,13 +21,13 @@ void OR(struct VM* mv, int opA_content, int opB_content, char opA, char opB);
 void XOR(struct VM* mv, int opA_content, int opB_content, char opA, char opB);
 void RND(struct VM* mv, int opA_content, int opB_content, char opA, char opB);
 void SYS(struct VM* mv, int value);
-void JMP(struct VM* mv, int opB_content, char opB, int *error);
-void JZ(struct VM* mv, int opB_content, char opB, int *error);
-void JP(struct VM* mv, int opB_content, char opB, int *error);
-void JN(struct VM* mv, int opB_content, char opB, int *error);
-void JNZ(struct VM* mv, int opB_content, char opB, int *error);
-void JNP(struct VM* mv, int opB_content, char opB, int *error);
-void JNN(struct VM* mv, int opB_content, char opB, int *error);
+void JMP(struct VM* mv, int opB_content, char opB, int *error, int *flag);
+void JZ(struct VM* mv, int opB_content, char opB, int *error, int *flag);
+void JP(struct VM* mv, int opB_content, char opB, int *error, int *flag);
+void JN(struct VM* mv, int opB_content, char opB, int *error, int *flag);
+void JNZ(struct VM* mv, int opB_content, char opB, int *error, int *flag);
+void JNP(struct VM* mv, int opB_content, char opB, int *error, int *flag);
+void JNN(struct VM* mv, int opB_content, char opB, int *error, int *flag);
 void LDL(struct VM* mv, int opB_content, char opB);
 void LDH(struct VM* mv, int opB_content, char opB);
 void NOT(struct VM* mv, int opB_content, char opB);
@@ -43,6 +43,6 @@ void Errores(int error);
  *
  * @param functions tabla de 24 funciones
  */
-void llamado_funcion(struct VM* mv, char opA,int opA_content,char opB,int opB_content,char cod_op, int *error);
+void llamado_funcion(struct VM* mv, char opA,int opA_content,char opB,int opB_content,char cod_op, int *error, int *flag);
 
 #endif //VIRTUAL_MACHINE_FUNCTIONS_H

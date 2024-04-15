@@ -49,6 +49,7 @@ int main(int argc, char *argv[]) {
         //carga de CS e inicializacion de SDT
 
         ///load_memory(file_mv,mv);
+        int flag = 0;
         unsigned int size_cs;
         size_cs = (header[6] << 8 ) | header[7];
         printf(" %d", size_cs);
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]) {
        ///EJECUCION
 
         int ip = mv.segment_descriptor_table[0].base;
-        int j = 0, opB_content, opA_content;
+        int j, opB_content, opA_content;
         char pos_act;
         char opA, opB, cod_op;
         char opA_size, opB_size;
@@ -110,25 +111,29 @@ int main(int argc, char *argv[]) {
             printf(" \n %X este es opBsize\n", opB_size);
 
             //CARGAMOS EN OPX_CONTENT EL CONTENIDO DE LOS OPERANDOS.
-            opB_content = 0x0000;
-            opA_content = 0x0000;
+            opB_content = 0x00000000;
+            opA_content = 0x00000000;
             j = 0;
             while (j < opB_size) {
                 ip+= 1;
                 mv.registers_table[5] = mv.memory[ip]; //nuevo
-                pos_act = (char)mv.registers_table[5]; //nuevo
+                pos_act = (char) mv.registers_table[5]; //nuevo
                 //opB_content = (opB_content | mv.memory[ip]) << 8;
-                opB_content = (opB_content | pos_act) << 8;
+
+                opB_content += pos_act;
+                printf(" \n %08X este es opBcontent\n", opB_content);
+                opB_content<<= 8;
+                printf(" \n %08X este es opBcontent\n", opB_content);
                 j++;
             }
-            opB_content >>= 8;
+           opB_content >>= 8;
             j = 0;
             while (j < opA_size) {
                 ip+= 1;
                 mv.registers_table[5] = mv.memory[ip]; //nuevo
                 pos_act = (char)mv.registers_table[5]; //nuevo
-                //opA_content = (opA_content | mv.memory[ip]) << 8;
-                opA_content = (opA_content | pos_act) << 8;
+                //opA_content = (opA_content | mv.memory[ip]) << 8
+                opA_content =(opA_content | pos_act) << 8;
                 j++;
             }
             opA_content >>= 8;
@@ -155,11 +160,17 @@ int main(int argc, char *argv[]) {
             *\n
             * analizar el contenido de cada tipo de operando(registro, inmediato, memoria)\n
             */
-            llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error);
+            llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error, &flag);
             //Se actualiza IP
-
-            ip += 1;
-            mv.registers_table[5] = mv.memory[ip] ; //nuevo
+            if(flag == 0) {
+                ip += 1;
+                mv.registers_table[5] = mv.memory[ip]; //nuevo
+            }
+            else{
+                ip = mv.registers_table[5];
+                mv.registers_table[5] = mv.memory[ip];
+            }
+            flag = 0;
            // pos_act = mv.memory[ip];
             //int aux = mv.registers_table[5] & 0xffff0000;
             //mv.registers_table[5] = aux | pos_act;

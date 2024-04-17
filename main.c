@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
         int flag = 0;
         unsigned int size_cs;
         size_cs = (header[6] << 8 ) | header[7];
-       // printf(" %d", size_cs);
+        printf(" %d", size_cs);
         int i = 0;
         unsigned char aux;
         fread(&aux, sizeof( char), 1, file_mv);
@@ -82,10 +82,24 @@ int main(int argc, char *argv[]) {
         if(dissasembler)
             dissasembler_func(mv);
 */
+        printf("\n DESUPUES  DE EJECUCION \n");
+        for (int j = 0 ; j <120 ; j++) {
+            if(j%10 == 0)
+                printf("\n");
+            printf("\t %02X",mv.memory[j]);
+        }
+        printf("\n TABLA DE REGISTROS PA \n");
+        for (int j = 0 ; j < 16; j++) {
+            if(j%4 == 0)
+                printf("\n");
+            printf("\t %08X",mv.registers_table[j]);
+
+        }
+
         int error = 0;
         mv.registers_table[5] = mv.memory[ip]; //se incicaliza IP
         while(ip < mv.segment_descriptor_table[0].size && error == 0) {
-           // printf(" \n %X este es el contenido de pos act\n", mv.registers_table[5]);
+            printf(" \n %X este es el contenido de pos act\n", mv.registers_table[5]);
             //carga de operandos
             pos_act = (char)mv.registers_table[5];
             opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);
@@ -97,8 +111,8 @@ int main(int argc, char *argv[]) {
             opA_size =  opA;
             opA_size ^=  0x03;
 
-            //printf(" \n %X este es opAsize\n", opA_size);
-            //printf(" \n %X este es opBsize\n", opB_size);
+            printf(" \n %X este es opAsize\n", opA_size);
+            printf(" \n %X este es opBsize\n", opB_size);
 
             //CARGAMOS EN OPX_CONTENT EL CONTENIDO DE LOS OPERANDOS.
             opB_content = 0x00000000;
@@ -122,12 +136,12 @@ int main(int argc, char *argv[]) {
                 j++;
             }
             opA_content >>= 8;
-            /*
+
             printf(" \n %X este es opAcontent\n", opA_content);
             printf(" \n %X este es opBcontent\n", opB_content);
             printf("\n %x este es cod op \n", cod_op);
             printf("\n ANTES DE EJECUCION \n");
-            */
+
 
             /**ACA EJECUTA OPERACION\n
             *\n
@@ -150,7 +164,7 @@ int main(int argc, char *argv[]) {
                 mv.registers_table[5] = mv.memory[ip];
             }
             flag = 0;
-            /*
+
             printf("\n DESUPUES  DE EJECUCION \n");
             for (int j = 0 ; j <120 ; j++) {
                 if(j%10 == 0)
@@ -164,7 +178,7 @@ int main(int argc, char *argv[]) {
                 printf("\t %08X",mv.registers_table[j]);
 
             }
-            */
+
         }
         Errores(error);
     }

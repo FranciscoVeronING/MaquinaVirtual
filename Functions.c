@@ -504,12 +504,13 @@ int get_puntero(int op_content,struct VM mv){
 
 void set_memoria(int pointer, int value, struct  VM* mv, int cant_bytes, int * error){
     /// el puntero tiene 2 bytes a codigo de segmento y 2 bytes de offset
-    //printf("estamos en set memoria\n");
+    printf("estamos en set memoria\n");
     //printf("%08X  puntero\n",pointer);
     //printf("%04X  valor\n", value);
     int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
     int aux = cant_bytes - 1;
-    if(index <= ((*mv).segment_descriptor_table[aux].size - 4)) {
+    int index_sdt = (pointer & 0xFFFF0000) >> 16;
+    if(index <= ((*mv).segment_descriptor_table[index_sdt].size - 4)) {
         for (int i = 0; i < cant_bytes; ++i) {
             (*mv).memory[index] = (char) (value >> (8 * aux));
             aux--;
@@ -570,10 +571,10 @@ int value_op(int op_content, char op_type, struct VM mv, int *error){  //obtiene
     }
     return value;
 }
-
 int get_registro(int op, struct VM mv){ //obtiene el valor de un registro
-    int cod_reg, sec_reg, valor;
-    sec_reg = op >> 4 & 0x3;        //almacena el tipo de registro
+    int cod_reg, sec_reg;
+    unsigned int valor;
+    sec_reg = (op >> 4) & 0x3;        //almacena el tipo de registro
     cod_reg = op & 0xF;             //almacena el registro
     switch (sec_reg) {
         case 0:{
@@ -593,16 +594,18 @@ int get_registro(int op, struct VM mv){ //obtiene el valor de un registro
             break;
         }
     }
+    printf("\n valor a asignar EN REGISTRO 111 %08X", valor);
     return valor;
 }
 
 void set_registro(int op, int valor, struct VM* mv){
     //cambia el valor de un registro
     int cod_reg, sec_reg;
-    sec_reg = op >> 4 & 0x3;        //almacena el tipo de registro
+    sec_reg = (op >> 4) & 0x3;        //almacena el tipo de registro
     cod_reg = op & 0xF;             //almacena el registro
     switch (sec_reg) {
         case 0:{
+            printf("\n valor a asignar EN REGISTRO %08X", valor);
             (*mv).registers_table[cod_reg] = valor; //Caso EAX
             break;
         }
@@ -624,17 +627,17 @@ void set_registro(int op, int valor, struct VM* mv){
 void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB_content, char cod_op, int *error, int *flag){
     switch (cod_op) {
         case 0:{
-            //printf("entra a mov");
+            printf("entra a mov");
             MOV(mv, opA_content, opB_content, opA, opB, error);
             break;
         }
         case 1:{
-            //printf("entra a ADD");
+            printf("entra a ADD");
             ADD(mv,opA_content,opB_content,opA,opB, error);
             break;
         }
         case 2:{
-            //printf("entra a SUB");
+            printf("entra a SUB");
             SUB(mv,opA_content,opB_content,opA,opB, error);
             break;
         }
@@ -689,7 +692,7 @@ void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB
             break;
         }
         case 0x10:{
-            //printf("entra a SYS");
+            printf("entra a SYS");
             SYS(mv, opB_content, error);
             break;
         }

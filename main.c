@@ -16,15 +16,14 @@ void set_registers_table(struct VM *pVm);
 
 
 int main(int argc, char *argv[]) {
-/// arg[0] = .exe; arg([1] .vmx
-    // Abrir el archivo en modo de lectura binaria
+/// arg[0] = .exe; arg[1] .vmx arg[2] "-d"
     FILE *file_mv;
-    int dissasembler = 0;
+    int dissasembler = 0; //flag de disassembler
     struct VM mv;
 
     if(argv[2] && strcmp(argv[2],"-d") == 0)
         dissasembler = 1;
-
+    //apertura de archivo
     file_mv = fopen(argv[1], "rb");
     if (file_mv == NULL) {
         perror("Error al abrir el archivo ");
@@ -34,9 +33,7 @@ int main(int argc, char *argv[]) {
 
     // Leer los primeros 6 bytes del archivo
     fread(&header,sizeof(char),8,file_mv);
-    //strcat(header,"\0");
-    ///VMX241
-    printf("%s",header);
+    //printf("%s",header);
     //Valida que la cabecera del archivo esta bien
     if(strncmp(header,"VMX24",5) != 0){// O PONER header != 0xVMX241
         perror("Error al abrir el archivo , header erroneo");
@@ -47,26 +44,20 @@ int main(int argc, char *argv[]) {
         //COMIENZO DE CARGA DE ARCHIVO EN CS (Code Segment)
         //Creacion de tabla de descriptores de segmentos
         //carga de CS e inicializacion de SDT
-
-        ///load_memory(file_mv,mv);
         int flag = 0;
         unsigned int size_cs;
         size_cs = (header[6] << 8 ) | header[7];
-        printf(" %d", size_cs);
+       // printf(" %d", size_cs);
         int i = 0;
         unsigned char aux;
         fread(&aux, sizeof( char), 1, file_mv);
         while(!feof(file_mv)){
             //carga la memoria ram con el codigo de segmento
-
             mv.memory[i] = aux;
             i++;
             fread(&aux, sizeof( char), 1, file_mv);
         }
         fclose(file_mv);
-
-        scanf("%c",&aux);
-
         //carga de Tabla de descriptores de segmento
         mv.segment_descriptor_table[0].base = 0x0000;
         mv.segment_descriptor_table[0].size = size_cs;
@@ -74,7 +65,6 @@ int main(int argc, char *argv[]) {
         mv.segment_descriptor_table[1].size = MEMORY_SIZE - size_cs;
         //Se inicializa tabla de registros
         set_registers_table(&mv);
-       // printf("%x DS\n", mv.registers_table[1]);
        ///EJECUCION
 
         int ip = mv.segment_descriptor_table[0].base;
@@ -88,16 +78,17 @@ int main(int argc, char *argv[]) {
      * error = 3 Division por Cero
      * error = -1 flag del STOP
      */
+     /*
         if(dissasembler)
             dissasembler_func(mv);
-
+*/
         int error = 0;
         mv.registers_table[5] = mv.memory[ip]; //se incicaliza IP
         while(ip < mv.segment_descriptor_table[0].size && error == 0) {
-            printf(" \n %X este es el contenido de pos act\n", mv.registers_table[5]);
+           // printf(" \n %X este es el contenido de pos act\n", mv.registers_table[5]);
             //carga de operandos
             pos_act = (char)mv.registers_table[5];
-            opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
+            opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);
             opA = (char)((pos_act & 0b00110000) >> 4);
             cod_op = (char)(pos_act & 0b00011111);
 
@@ -106,9 +97,8 @@ int main(int argc, char *argv[]) {
             opA_size =  opA;
             opA_size ^=  0x03;
 
-
-            printf(" \n %X este es opAsize\n", opA_size);
-            printf(" \n %X este es opBsize\n", opB_size);
+            //printf(" \n %X este es opAsize\n", opA_size);
+            //printf(" \n %X este es opBsize\n", opB_size);
 
             //CARGAMOS EN OPX_CONTENT EL CONTENIDO DE LOS OPERANDOS.
             opB_content = 0x00000000;
@@ -116,38 +106,30 @@ int main(int argc, char *argv[]) {
             j = 0;
             while (j < opB_size) {
                 ip+= 1;
-                mv.registers_table[5] = mv.memory[ip]; //nuevo
-                pos_act = (char) mv.registers_table[5]; //nuevo
-                //opB_content = (opB_content | mv.memory[ip]) << 8;
-
+                mv.registers_table[5] = mv.memory[ip];
+                pos_act = (char) mv.registers_table[5];
                 opB_content += (unsigned char)pos_act;
-                printf(" \n %08X este es opBcontent\n", opB_content);
                 opB_content<<= 8;
-                printf(" \n %08X este es opBcontent\n", opB_content);
                 j++;
             }
            opB_content >>= 8;
             j = 0;
             while (j < opA_size) {
                 ip+= 1;
-                mv.registers_table[5] = mv.memory[ip]; //nuevo
-                pos_act = (char)mv.registers_table[5]; //nuevo
-                //opA_content = (opA_content | mv.memory[ip]) << 8
+                mv.registers_table[5] = mv.memory[ip];
+                pos_act = (char)mv.registers_table[5];
                 opA_content =(opA_content | (unsigned char)pos_act) << 8;
                 j++;
             }
             opA_content >>= 8;
-
-
+            /*
             printf(" \n %X este es opAcontent\n", opA_content);
             printf(" \n %X este es opBcontent\n", opB_content);
             printf("\n %x este es cod op \n", cod_op);
             printf("\n ANTES DE EJECUCION \n");
-
+            */
 
             /**ACA EJECUTA OPERACION\n
-            *
-            * que necesitamos?\n
             *\n
             * * codigo de operacion  \n
             * * operando A \n
@@ -156,25 +138,19 @@ int main(int argc, char *argv[]) {
             * * contenido de B \n
             * * tipos de operando \n
             *\n
-            * juntando estas cosas, deberiamos poder ejecutar la instruccion\n
-            *\n
-            * analizar el contenido de cada tipo de operando(registro, inmediato, memoria)\n
             */
             llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error, &flag);
             //Se actualiza IP
             if(flag == 0) {
                 ip += 1;
-                mv.registers_table[5] = mv.memory[ip]; //nuevo
+                mv.registers_table[5] = mv.memory[ip];
             }
-            else{
+            else{   //sise ejecuta un Jump, flag cambia su valor, por lo tanto se modifica ip
                 ip = mv.registers_table[5];
                 mv.registers_table[5] = mv.memory[ip];
             }
             flag = 0;
-           // pos_act = mv.memory[ip];
-            //int aux = mv.registers_table[5] & 0xffff0000;
-            //mv.registers_table[5] = aux | pos_act;
-
+            /*
             printf("\n DESUPUES  DE EJECUCION \n");
             for (int j = 0 ; j <120 ; j++) {
                 if(j%10 == 0)
@@ -188,12 +164,12 @@ int main(int argc, char *argv[]) {
                 printf("\t %08X",mv.registers_table[j]);
 
             }
+            */
         }
         Errores(error);
     }
-
-    /*if(dissasembler)
-        dissasembler_func(mv);*/
+    if(dissasembler)
+        dissasembler_func(mv);
 }
 
 
@@ -232,7 +208,7 @@ void dissasembler_func(struct  VM mv){
         /// [pos instruccion]  instrucciones en hexa | MNEM  OPA, OPB
         printf("\n[%04X] ",(unsigned char)   pos_act);
 
-        opB = (char) (((mv.memory[pos_act] & 0b11000000) >> 6) & 0b00000011);   //CONSULTAR SI ES NECESARIO. LA ULTIMA MASCARA evita problemas con negativo
+        opB = (char) (((mv.memory[pos_act] & 0b11000000) >> 6) & 0b00000011);
         opA = (char) ((mv.memory[pos_act] & 0b00110000) >> 4);
         cod_op = (char) (mv.memory[pos_act] & 0b00011111);
 
@@ -288,22 +264,24 @@ void dissasembler_func(struct  VM mv){
                 break;
             }
         }
+        if(opA != 3)
+            printf(",");
         switch (opB) {
             case 0: {    //memoria
                 registro = opB_content >> 16;
                 offset = opB_content & 0x00FFFF;
                 if (offset == 0)
-                    printf(", [%s]", regs_tags[registro]);
+                    printf(" [%s]", regs_tags[registro]);
                 else
-                    printf(", [%s+%d]", regs_tags[registro], offset);
+                    printf(" [%s+%d]", regs_tags[registro], offset);
                 break;
             }
             case 1: {    //inmediato
-                printf(", %d", (short int)opB_content);
+                printf(" %d", (short int)opB_content);
                 break;
             }
             case 2: {    //registro
-                printf(", %s", regs_tags[(char)opB_content]);
+                printf(" %s", regs_tags[(char)opB_content]);
 
                 break;
             }
@@ -316,9 +294,14 @@ void dissasembler_func(struct  VM mv){
 void carga_regs(char regs_tags[0x40][4]){
     strcpy( regs_tags[0], "CS");
     strcpy( regs_tags[1], "DC");
-    strcpy( regs_tags[4], "IP");
-    strcpy( regs_tags[7], "CC");
-    strcpy( regs_tags[8], "AC");
+    strcpy( regs_tags[2], "S/U");
+    strcpy( regs_tags[3], "S/U");
+    strcpy( regs_tags[4], "S/u");
+    strcpy( regs_tags[5], "IP");
+    strcpy( regs_tags[6], "S/u");
+    strcpy( regs_tags[7], "S/u");
+    strcpy( regs_tags[8], "CC");
+    strcpy( regs_tags[9], "AC");
     strcpy( regs_tags[0xA], "EAX");
     strcpy( regs_tags[0xB], "EBX");
     strcpy( regs_tags[0xC], "ECX");

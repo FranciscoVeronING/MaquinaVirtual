@@ -344,11 +344,14 @@ void SYS(struct VM* mv, int value,int *error){
                 printf("[%04X] \t", index);
                 acum = 0;
                 for (int k = 0; k < size_cells; k++) {
-                    acum <<=8;//se recupera cantidad de celda
+                    acum <<= 8;//se recupera cantidad de celda
                     acum |= (*mv).memory[index]; //se guarda el valor y se shiftea 1 byte a la izquierda
                     index++;
                 }
-                show_format_write(acum, format, size_cells);
+                show_format_write(acum, format & 0X1, size_cells);
+                show_format_write(acum, format & 0X2, size_cells);
+                show_format_write(acum, format & 0X4, size_cells);
+                show_format_write(acum, format & 0X8, size_cells);
                 printf("\n");
             }
             break;
@@ -359,7 +362,7 @@ void SYS(struct VM* mv, int value,int *error){
 void show_format_write( int acum, char format, int size_cells) {
     switch (format) {
         case 0x1:{
-            printf("%d", acum);
+            printf("%d ", acum);
             break;
         }
         case 0x2:{
@@ -368,20 +371,19 @@ void show_format_write( int acum, char format, int size_cells) {
                 int mascara = 0xFF << desplazamiento;
                 int caracter = (acum & mascara) >> desplazamiento;
                 if ((caracter >= 32 && caracter <= 126) || (caracter >= 160 && caracter <= 255)) {
-                    printf("%c", caracter);
+                    printf("%c ", caracter);
                 }
                 else
-                    printf(".");
-                //acum >>=8;
+                    printf(". ");
             }
             break;
         }
         case 0x4:{
-            printf("%08o", acum);
+            printf("@%o ", acum);
             break;
         }
         case 0x8:{
-            printf("%08X", acum);
+            printf("%%%X ", acum);
         }
     }
 }

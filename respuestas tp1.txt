@@ -5,11 +5,11 @@ SAMPLE1
 [0062]  80000000
 [0066]  40000000
 [006A]  00000000
-
+TA BOM
 
 SAMPLE2
 [004C]       03524578
-
+TA BOM
 
 SAMPLE3
 
@@ -29,10 +29,18 @@ SAMPLE 6
 
 SAMPLE 7 
 Caida de segmento
+TA BOM
 
 SAMPLE 8 
 [0033]  00016333
+SE ROMPIO Se rompio F
 
 SAMPLE 9
+SE ROMPIO F
 
 SAMPLE 10
+[0050]  65534 ■   . . @177776 %FFFE
+[0054]  26 . . . . @32 %1A
+[0058]  56506 ║ ▄ . . @156272 %DCBA
+[0064]  b i e n
+TA BOM (o eso creo, da diferente al de larsen)

@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
             llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error);
             //scanf("&d",header);
 
-           /* printf("\n DESUPUES  DE EJECUCION \n");
+            printf("\n DESUPUES  DE EJECUCION \n");
             for (int j = 0 ; j <150 ; j++) {
                 if(j%10 == 0)
                     printf("\n");
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
                     printf("\n");
                 printf("\t %08X",mv.registers_table[j]);
 
-            }*/
+            }
         }
         Errores(error);
     }

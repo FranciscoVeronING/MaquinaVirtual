@@ -221,6 +221,8 @@ void CMP(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
+    printf("valor A %X", value_A);
+    printf("valor B %X", value_B);
 
     value_A -= value_B;
     //cambiamos el valor del CC(condition code)
@@ -286,14 +288,16 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
 }
 
 void SYS(struct VM* mv, int value,int *error){
-    char format = (char)((*mv).registers_table[0xA] % 0x000000FF); // obtenemos el formato que esta en AL
+    char format = (char)((*mv).registers_table[0xA] & 0x000000FF); // obtenemos el formato que esta en AL
     char cant_cells = (char)((*mv).registers_table[0xC] & 0x000000FF);  // obtenemos la cantidad de celdas, esta en CL
     char size_cells = (char)(((*mv).registers_table[0xC] >> 8) & 0x000000FF); //obtenemos el tamaño de las celdas, esta en CH
     int aux=0;
     int  acum;
     char aux1[100];
     char pos_sdt = (char) ((*mv).registers_table[0xD] >> 16);
-    int index =(*mv).segment_descriptor_table[pos_sdt].base + ((*mv).registers_table[0xD] & 0x0000FFFF);
+    //int index =(*mv).segment_descriptor_table[pos_sdt].base + ((*mv).registers_table[0xD] & 0x0000FFFF);
+    int index = get_puntero(0x0D0000, *mv);
+    printf("    ESTE ES INDEX :%X ", index);
     switch (value) {
         case 1:{
             printf("Ingrese el valor");
@@ -535,9 +539,9 @@ void STOP(int *error){
 
 int get_puntero(int op_content,struct VM mv){
     int pointer;
-   char index = op_content >> 16;
-   int aux = mv.registers_table[index] >> 16;
-   pointer = 0x00010000 | mv.registers_table[index]; //se asigna el contenido que haya en el puntero, si es DS -> 0x00010000
+    char index = op_content >> 16;
+    int aux = mv.registers_table[index] >> 16;
+    pointer = 0x00010000 | mv.registers_table[index]; //se asigna el contenido que haya en el puntero, si es DS -> 0x00010000
    if(index == 1 || aux == 1)
        pointer |= mv.segment_descriptor_table[aux].base; //
    pointer += (op_content & 0x0000FFFF) ;
@@ -554,8 +558,10 @@ void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes
     int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
     int aux = cant_bytes - 1;
     int index_sdt = (int)(pointer  >> 16);
-  /*  printf("este es el comienzo de DS PA %x   y ", (*mv).segment_descriptor_table[index_sdt].base);
-    printf("este es el index PA %x", index);*/
+  //  printf("este es el comienzo de DS PA %x   y ", (*mv).segment_descriptor_table[index_sdt].base);
+    printf("este es el index PA %x", index);  //81
+    printf( "\n%X", (*mv).segment_descriptor_table[index_sdt].base );  //0
+    printf( "\n%X", ((*mv).segment_descriptor_table[index_sdt].size - 4) );  //7D
     if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= ((*mv).segment_descriptor_table[index_sdt].size - 4))) {
         for (int i = 0; i < cant_bytes; ++i) {
             (*mv).memory[index] = (char) (value >> (8 * aux));
@@ -608,7 +614,7 @@ unsigned int get_registro(int op, struct VM mv){ //obtiene el valor de un regist
     int cod_reg, sec_reg;
     unsigned int valor;
     sec_reg = (op >> 4) & 0x3;        //almacena el tipo de registro
-    cod_reg = op & 0xF;             //almacena el registro
+    cod_reg = op & 0x0F;             //almacena el registro
     switch (sec_reg) {
         case 0:{
                 valor = mv.registers_table[cod_reg];

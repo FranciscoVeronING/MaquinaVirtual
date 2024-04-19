@@ -537,14 +537,11 @@ int get_puntero(int op_content,struct VM mv){
     int pointer;
    char index = op_content >> 16;
    int aux = mv.registers_table[index] >> 16;
-   pointer = mv.registers_table[index]; //se asigna el contenido que haya en el puntero, si es DS -> 0x00010000
-   if(index == 1)
+   pointer = 0x00010000 | mv.registers_table[index]; //se asigna el contenido que haya en el puntero, si es DS -> 0x00010000
+   if(index == 1 || aux == 1)
        pointer |= mv.segment_descriptor_table[aux].base; //
-   else
-       pointer |= 0x00010000;
-
    pointer += (op_content & 0x0000FFFF) ;
-   // printf(" \n %X este es pointer\n", pointer);
+    //printf(" \n %X este es pointer\n", pointer);
 
     return pointer;
 }

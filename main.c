@@ -27,7 +27,6 @@ int main(int argc, char *argv[]) {
 
     // Leer los primeros 6 bytes del archivo
     fread(&header,sizeof(unsigned char),8,file_mv);
-    //printf("%s",header);
     //Valida que la cabecera del archivo esta bien
     if(strncmp(header,"VMX24",5) != 0){// O PONER header != 0xVMX241
         perror("Error al abrir el archivo , header erroneo");
@@ -38,10 +37,8 @@ int main(int argc, char *argv[]) {
         //COMIENZO DE CARGA DE ARCHIVO EN CS (Code Segment)
         //Creacion de tabla de descriptores de segmentos
         //carga de CS e inicializacion de SDT
-        int flag = 0;
         unsigned int size_cs;
         size_cs = (int)((header[6] << 8 ) | header[7]);
-        printf("TAMAÑO DE CS %d", size_cs);
         int i = 0;
         unsigned char aux;
         fread(&aux, sizeof( char), 1, file_mv);
@@ -66,18 +63,11 @@ int main(int argc, char *argv[]) {
         char pos_act;
         char opA, opB, cod_op;
         char opA_size, opB_size;
-        /**
-     * error = 1 Instruccion inválida
-     * error = 2 Caida de segmento
-     * error = 3 Division por Cero
-     * error = -1 flag del STOP
-     */
         int error = 0;
        // mv.registers_table[5] = mv.memory[ip]; //se incicaliza IP //SACAR
         while(error == 0 && mv.registers_table[5] < mv.segment_descriptor_table[0].size) {
             //printf(" \n %X este es el contenido de pos act\n", mv.registers_table[5]);
             //carga de operandos
-           // pos_act = (char)mv.registers_table[5];
             pos_act = (char) mv.memory[mv.registers_table[5]];
             opB = (char)(((pos_act & 0b11000000) >> 6) & 0b00000011);
             opA = (char)((pos_act & 0b00110000) >> 4);
@@ -96,32 +86,24 @@ int main(int argc, char *argv[]) {
             opA_content = 0x00000000;
             j = 0;
             while (j < opB_size) {
-                //ip+= 1;
-                //mv.registers_table[5] = mv.memory[ip];
                 mv.registers_table[5]  += 1; //SE SACA IP Y LA DE ARRIBA
                 pos_act = (char) mv.memory[mv.registers_table[5]];
                 opB_content <<= 8;
                 opB_content += (unsigned char)pos_act;
-                //opB_content<<= 8;
                 j++;
             }
-           //opB_content >>= 8;
             j = 0;
             while (j < opA_size) {
-                //ip+= 1;
-               // mv.registers_table[5] = mv.memory[ip];
                 mv.registers_table[5]  += 1; //SE SACA IP Y LA DE ARRIBA
                 pos_act = (char)mv.memory[mv.registers_table[5]];
                 opA_content <<= 8;
                 opA_content += (unsigned char)pos_act;
                 j++;
             }
-            //opA_content >>= 8;
 /*
             printf(" \n %X este es opAcontent\n", opA_content);
             printf(" \n %X este es opBcontent\n", opB_content);
             printf("\n %x este es cod op \n", cod_op);
-            printf("\n ANTES DE EJECUCION \n");
 */
 
             /**ACA EJECUTA OPERACION\n
@@ -134,21 +116,13 @@ int main(int argc, char *argv[]) {
             * * tipos de operando \n
             *\n
             */
-            /*
-            printf("\t %08X PASTA BASE",mv.segment_descriptor_table[0].base);
-            printf("\t %08X TAMANO",mv.segment_descriptor_table[0].size);
-            printf("\n DESUPUES  DE EJECUCION \n");
-            */
-            //Se actualiza IP
-            //ip += 1;
-            //mv.registers_table[5] = mv.memory[ip];
-            mv.registers_table[5]  += 1; //SE SACA IP Y LA DE ARRIBA}
-          //  printf("\neste es el ip antes de entrar a FUNC : %04X\n",mv.registers_table[5]);
-            llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error);
-            //scanf("&d",header);
 
+            //Se actualiza IP
+            mv.registers_table[5]  += 1; //SE SACA IP Y LA DE ARRIBA}
+            llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error);
+/*
             printf("\n DESUPUES  DE EJECUCION \n");
-            for (int j = 0 ; j <150 ; j++) {
+            for (int j = 0 ; j <200 ; j++) {
                 if(j%10 == 0)
                     printf("\n");
                 printf(" [%02X] %02X  ",j,mv.memory[j]);
@@ -160,6 +134,7 @@ int main(int argc, char *argv[]) {
                 printf("\t %08X",mv.registers_table[j]);
 
             }
+*/
         }
         Errores(error);
     }

@@ -182,7 +182,7 @@ void OR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, in
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA_content,value_A,mv);
 
-    //cambiamos el valor del CC(condition code
+    //cambiamos el valor del CC(condition code)
     if(value_A < 0)
         mv->registers_table[8] = (int)0x80000000;
     else
@@ -221,8 +221,6 @@ void CMP(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-    printf("valor A %X", value_A);
-    printf("valor B %X", value_B);
 
     value_A -= value_B;
     //cambiamos el valor del CC(condition code)
@@ -287,58 +285,56 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
             mv->registers_table[8] = 0x00000000;
 }
 
-void SYS(struct VM* mv, int value,int *error){
-    char format = (char)((*mv).registers_table[0xA] & 0x000000FF); // obtenemos el formato que esta en AL
-    char cant_cells = (char)((*mv).registers_table[0xC] & 0x000000FF);  // obtenemos la cantidad de celdas, esta en CL
-    char size_cells = (char)(((*mv).registers_table[0xC] >> 8) & 0x000000FF); //obtenemos el tamaño de las celdas, esta en CH
-    int aux=0;
-    int  acum;
+void SYS(struct VM* mv, int value,int *error) {
+    char format = (char) ((*mv).registers_table[0xA] & 0x000000FF); // obtenemos el formato que esta en AL
+    int cant_cells =  ((*mv).registers_table[0xC] & 0x000000FF);  // obtenemos la cantidad de celdas, esta en CL
+    int size_cells =  (((*mv).registers_table[0xC] >> 8) & 0x000000FF); //obtenemos el tamaño de las celdas, esta en CH
+    int aux = 0, acum;
     char aux1[100];
-    char pos_sdt = (char) ((*mv).registers_table[0xD] >> 16);
-    //int index =(*mv).segment_descriptor_table[pos_sdt].base + ((*mv).registers_table[0xD] & 0x0000FFFF);
     int index = get_puntero(0x0D0000, *mv);
-    printf("    ESTE ES INDEX :%X ", index);
     switch (value) {
-        case 1:{
-            printf("Ingrese el valor");
-            switch(format){
-                case 1:{
-                    scanf("%d", &aux);
-                    set_memoria(index, aux, mv, size_cells, error);
-
-                    break;
-                }
-                case 2:{
-                    scanf("%s", aux1);
-                    for(int i=0; i<cant_cells; i++){
-                        set_memoria(index, aux1[i], mv, 1, error);
-                        index++;
+        case 1: {
+            for (int n = 0; n < cant_cells; n++) {
+                printf("Ingrese el valor: ");
+                switch (format) {
+                    case 1: {
+                        scanf("%d", &aux);
+                        set_memoria(index, aux, mv, size_cells, error);
+                        break;
                     }
-                    break;
+                    case 2: {
+                        scanf("%s", aux1);
+                        for (int i = 0; i < size_cells; i++) {
+                            set_memoria(index, aux1[i], mv, 1, error);
+                            index++;
+                        }
+                        break;
+                    }
+                    case 4: {
+                        scanf("%o", &aux);
+                        set_memoria(index, aux, mv, size_cells, error);
+                        break;
+                    }
+                    case 8: {
+                        scanf("%x", &aux);
+                        set_memoria(index, aux, mv, size_cells, error);
+                        break;
+                    }
                 }
-                case 4:{
-                    scanf("%o", &aux);
-                    set_memoria(index, aux, mv, size_cells, error);
-                    break;
-                }
-                case 8:{
-                    scanf("%x", &aux);
-                    set_memoria(index, aux, mv, size_cells, error);
-                    break;
-                }
+                index+= size_cells;
             }
             break;
         }
-        case 2:{    ///CASO WRITE
-        /**
-         * muestra en pantalla los valores contenidos a partir de la posición de memoria apuntada \n
-         * por EDX, recuperando CL celdas de tamaño CH. El modo de escritura depende de la configuración \n
-         *  almacenada en AL con el siguiente formato: \n
-         *  %08 3 1: escribe hexadecimal \n
-         *  %04 2 1: escribe octal \n
-         *  %02 1 1: escribe caracteres \n
-         *   %01 0 1: escribe decimal \n
-         */
+        case 2: {    ///CASO WRITE
+            /**
+             * muestra en pantalla los valores contenidos a partir de la posición de memoria apuntada \n
+             * por EDX, recuperando CL celdas de tamaño CH. El modo de escritura depende de la configuración \n
+             *  almacenada en AL con el siguiente formato: \n
+             *  %08 3 1: escribe hexadecimal \n
+             *  %04 2 1: escribe octal \n
+             *  %02 1 1: escribe caracteres \n
+             *   %01 0 1: escribe decimal \n
+             */
 
             // se carga en index el valor donde apunta en memoria EDX xx xx cc cc
             //  xx xx esta reservado para ubicacion del segmento
@@ -375,10 +371,10 @@ void show_format_write( int acum, char format, int size_cells) {
                 int mascara = 0xFF << desplazamiento;
                 int caracter = (acum & mascara) >> desplazamiento;
                 if ((caracter >= 32 && caracter <= 126) || (caracter >= 160 && caracter <= 255)) {
-                    printf("%c ", caracter);
+                    printf("%c", caracter);
                 }
                 else
-                    printf(". ");
+                    printf(".");
             }
             break;
         }
@@ -408,7 +404,7 @@ void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA_content,value_A,mv);
 
-    //cambiamos el valor del CC(condition code
+    //cambiamos el valor del CC(condition code)
     if(value_A < 0)
         mv->registers_table[8] = (int)0x80000000;
     else
@@ -423,31 +419,26 @@ void JMP(struct VM* mv, int opA_content, char opA, int *error){
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     if(value_A < mv->segment_descriptor_table[0].size) {
         mv->registers_table[5] = (int) (value_A & 0x0000FFFF);
-       // *flag = 1;
     }
     else
         *error = 2; //caida de segmento
 }
 
 void JZ(struct VM* mv, int opB_content, char opB, int *error){
-    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
     if( mv->registers_table[8] == 0x40000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
         if (value_B < mv->segment_descriptor_table[0].size){
             (*mv).registers_table[5] = value_B;
-           // *flag = 1;
         }
         else
             *error = 2; //caida de segmento
     }
 }
 void JP(struct VM* mv, int opB_content, char opB, int *error){
-    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if((char) aux == 0x0) {
+    if(mv->registers_table[8] != 0x40000000 && mv->registers_table[8] != 0x80000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
         if (value_B < mv->segment_descriptor_table[0].size){
             (*mv).registers_table[5] = value_B;
-           // *flag = 1;
         }
         else
             *error = 2; //caida de segmento
@@ -455,24 +446,20 @@ void JP(struct VM* mv, int opB_content, char opB, int *error){
 }
 
 void JN(struct VM* mv, int opB_content, char opB, int *error){
-    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x8) {
+    if(mv->registers_table[8] == 0x80000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
         if (value_B < mv->segment_descriptor_table[0].size){
             (*mv).registers_table[5] = value_B;
-          //  *flag = 1;
         }
         else
             *error = 2; //caida de segmento
     }
 }
 void JNZ(struct VM* mv, int opB_content, char opB, int *error){
-    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x8 || aux == 0x0) {
+    if(mv->registers_table[8] == 0x80000000 || mv->registers_table[8] == 0x00000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
         if (value_B < mv->segment_descriptor_table[0].size){
             (*mv).registers_table[5] = value_B;
-            //*flag = 1;
         }
         else
             *error = 2; //caida de segmento
@@ -480,12 +467,10 @@ void JNZ(struct VM* mv, int opB_content, char opB, int *error){
 }
 
 void JNP(struct VM* mv, int opB_content, char opB, int *error){
-    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x4 || aux == 0x8) {
+    if( mv->registers_table[8] == 0x40000000 || mv->registers_table[8] == 0x80000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
         if (value_B < mv->segment_descriptor_table[0].size){
             (*mv).registers_table[5] = value_B;
-            //*flag = 1;
         }
         else
             *error = 2; //caida de segmento
@@ -493,12 +478,10 @@ void JNP(struct VM* mv, int opB_content, char opB, int *error){
 }
 
 void JNN(struct VM* mv, int opB_content, char opB, int *error){
-    int aux = (mv->registers_table[8] >> 28) & 0x0000000F;
-    if( aux == 0x4 || aux == 0x0) {
+    if(mv->registers_table[8] == 0x40000000 || mv->registers_table[8] == 0x00000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
         if (value_B < mv->segment_descriptor_table[0].size){
             (*mv).registers_table[5] = value_B;
-           // *flag = 1;
         }
         else
             *error = 2; //caida de segmento
@@ -543,7 +526,7 @@ int get_puntero(int op_content,struct VM mv){
     int aux = mv.registers_table[index] >> 16;
     pointer = 0x00010000 | mv.registers_table[index]; //se asigna el contenido que haya en el puntero, si es DS -> 0x00010000
    if(index == 1 || aux == 1)
-       pointer |= mv.segment_descriptor_table[aux].base; //
+       pointer += mv.segment_descriptor_table[aux].base;
    pointer += (op_content & 0x0000FFFF) ;
     //printf(" \n %X este es pointer\n", pointer);
 
@@ -552,16 +535,9 @@ int get_puntero(int op_content,struct VM mv){
 
 void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes, int * error){
     /// el puntero tiene 2 bytes a codigo de segmento y 2 bytes de offset
-   /* printf("estamos en set memoria\n");
-    printf("%08X  puntero\n",pointer);
-    printf("%04X  valor\n", value);*/
     int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
     int aux = cant_bytes - 1;
     int index_sdt = (int)(pointer  >> 16);
-  //  printf("este es el comienzo de DS PA %x   y ", (*mv).segment_descriptor_table[index_sdt].base);
-    printf("este es el index PA %x", index);  //81
-    printf( "\n%X", (*mv).segment_descriptor_table[index_sdt].base );  //0
-    printf( "\n%X", ((*mv).segment_descriptor_table[index_sdt].size - 4) );  //7D
     if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= ((*mv).segment_descriptor_table[index_sdt].size - 4))) {
         for (int i = 0; i < cant_bytes; ++i) {
             (*mv).memory[index] = (char) (value >> (8 * aux));
@@ -576,7 +552,6 @@ void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes
 
 unsigned int get_memoria(int pointer, struct VM mv, int *error){
     ///hay 2 opciones, si es memoria directa, o si es la memoria de un registro
-  // printf("\n entro a get memoria \n");
     unsigned int value = 0;
     int index = pointer & 0x0000FFFF; //OFFSET
     int index_sdt = (int)(pointer & 0xFFFF0000)>>16;
@@ -598,8 +573,8 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
         case 0: {   //caso de memoria
             /// 0000 xxxx 11111111 11111111
             int pointer = get_puntero(op_content,mv);
-           value = get_memoria(pointer, mv, error);
-           break;
+            value = get_memoria(pointer, mv, error);
+            break;
         }
         case 1:  //caso inmediato
             value = op_content;
@@ -613,7 +588,7 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
 unsigned int get_registro(int op, struct VM mv){ //obtiene el valor de un registro
     int cod_reg, sec_reg;
     unsigned int valor;
-    sec_reg = (op >> 4) & 0x3;        //almacena el tipo de registro
+    sec_reg = (op >> 4);        //almacena el tipo de registro
     cod_reg = op & 0x0F;             //almacena el registro
     switch (sec_reg) {
         case 0:{
@@ -640,29 +615,23 @@ unsigned int get_registro(int op, struct VM mv){ //obtiene el valor de un regist
 void set_registro(int op,unsigned int valor, struct VM* mv){
     //cambia el valor de un registro
     int cod_reg, sec_reg;
-    sec_reg = (op >> 4) & 0x3;        //almacena el tipo de registro
+    sec_reg = (op >> 4);        //almacena el tipo de registro
     cod_reg = op & 0xF;             //almacena el registro
     switch (sec_reg) {
         case 0:{
-           //printf("\n valor a asignar EN REGISTRO %08X", valor);
-            if((valor & 0x8000) == 0x8000){
-                valor = (int)0xFFFF0000 + valor;
-                (*mv).registers_table[cod_reg] = (int)valor;
-            }
-            else
-                (*mv).registers_table[cod_reg] = (int)valor; //Caso EAX
+            (*mv).registers_table[cod_reg] = (int)valor; //Caso EAX
             break;
         }
         case 1:{
-            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFFFF00) | valor; //se quieren mantener los 24 bits y modificar los ultimos 8 (caso AL)
+            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFFFF00) + (valor & 0x000000ff); //se quieren mantener los 24 bits y modificar los ultimos 8 (caso AL)
             break;
         }
         case 2:{
-            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFF00FF) | (valor << 8); // Caso modificar AH
+            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFF00FF) | ((valor & 0x000000ff) << 8); // Caso modificar AH
             break;
         }
         case 3:{
-            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFF0000) | valor; //Caso modificar AX
+            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFF0000) + (valor & 0x0000FFFF); //Caso modificar AX
             break;
         }
     }
@@ -802,6 +771,12 @@ void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB
     }
 }
 void Errores(int error){
+    /**
+    * error = 1 Instruccion inválida
+    * error = 2 Caida de segmento
+    * error = 3 Division por Cero
+    * error = -1 flag del STOP
+    */
     switch(error){
         case 1: {
             printf("\nError: Instruccion invalida");

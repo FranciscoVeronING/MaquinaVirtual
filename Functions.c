@@ -33,13 +33,7 @@ void ADD(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
         set_registro(opA_content,value_A, mv);
 
     //cambiamos el valor del CC(condition code
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 void SUB(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
@@ -59,13 +53,7 @@ void SUB(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
             set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 void MUL(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
@@ -84,13 +72,7 @@ void MUL(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
         set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 void DIV(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
@@ -110,13 +92,7 @@ void DIV(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
             set_registro(opA_content, value_A, mv);
 
         //cambiamos el valor del CC(condition code
-        if(value_A < 0)
-            mv->registers_table[8] = (int)0x80000000;
-        else
-            if(value_A == 0)
-                mv->registers_table[8] = 0x40000000;
-            else
-                mv->registers_table[8] = 0x00000000;
+        change_cc(mv, value_A);
     } else
         *error = 3;
 
@@ -158,13 +134,7 @@ void AND(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
         set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 void OR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
@@ -183,13 +153,7 @@ void OR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, in
         set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code)
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 void XOR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
@@ -208,13 +172,7 @@ void XOR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
         set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 void CMP(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
@@ -224,13 +182,7 @@ void CMP(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
 
     value_A -= value_B;
     //cambiamos el valor del CC(condition code)
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 void SHL(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
@@ -250,13 +202,7 @@ void SHL(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
         set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
@@ -276,13 +222,7 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
         set_registro(opA_content,value_A,mv);
 
     //cambiamos el valor del CC(condition code
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 void SYS(struct VM* mv, int value,int *error) {
@@ -403,15 +343,8 @@ void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA_content,value_A,mv);
-
     //cambiamos el valor del CC(condition code)
-    if(value_A < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else
-        if(value_A == 0)
-            mv->registers_table[8] = 0x40000000;
-        else
-            mv->registers_table[8] = 0x00000000;
+    change_cc(mv, value_A);
 }
 
 
@@ -506,14 +439,7 @@ void NOT(struct VM* mv, int opA_content, char opA, int *error){
     }
     else if(opA == 2)  // Si el operando A es un registro
         set_registro(opA_content,value, mv);
-
-    if(value < 0)
-        mv->registers_table[8] = (int)0x80000000;
-    else if(value == 0)
-        mv->registers_table[8] = 0x40000000;
-    else
-        mv->registers_table[8] = 0x00000000;
-
+    change_cc(mv, value);
 }
 
 void STOP(int *error){
@@ -791,4 +717,14 @@ void Errores(int error){
             break;
         }
     }
+}
+
+void change_cc(struct  VM* mv, int value_A){
+    if(value_A < 0)
+        (*mv).registers_table[8] = (int)0x80000000;
+    else
+    if(value_A == 0)
+        (*mv).registers_table[8] = 0x40000000;
+    else
+        (*mv).registers_table[8] = 0x00000000;
 }

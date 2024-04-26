@@ -37,4 +37,5 @@ void Errores(int error);
 void llamado_funcion(struct VM* mv, char opA,int opA_content,char opB,int opB_content,char cod_op, int *error);
 void show_format_write( int acum, char format, int size_cells);
 void change_cc(struct  VM* mv, int value_A);
+void set_value(int value, char op, int op_content, struct VM *mv, int *error);
 #endif //VIRTUAL_MACHINE_FUNCTIONS_H

@@ -25,13 +25,7 @@ void ADD(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
      int value_B =(int) value_op(opB_content, opB, *mv, error);
      value_A += value_B;
     // Guardamos el valor resultante de vuelta en el operando A
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_A, mv);
-
+    set_value(value_A, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code
     change_cc(mv, value_A);
 }
@@ -40,18 +34,9 @@ void SUB(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-
     value_A -= value_B;
-
     // Guardamos el valor resultante de vuelta en el operando A
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else
-        if(opA == 2)  // Si el operando A es un registro
-            set_registro(opA_content,value_A,mv);
-
+    set_value(value_A, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code
     change_cc(mv, value_A);
 }
@@ -60,17 +45,9 @@ void MUL(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-
     value_A *= value_B;
-
     // Guardamos el valor resultante de vuelta en el operando A
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_A,mv);
-
+    set_value(value_A, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code
     change_cc(mv, value_A);
 }
@@ -85,54 +62,28 @@ void DIV(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
         value_A /= value_B;
         mv->registers_table[9] = resto;  // se guarda el valor del resto de la division entera
         // Guardamos el valor resultante de vuelta en el operando A
-        if (opA == 0) { // Si el operando A es de memoria
-            int pointer = get_puntero(opA_content, *mv);
-            set_memoria(pointer, value_A, mv, 4, error);
-        } else if (opA == 2)  // Si el operando A es un registro
-            set_registro(opA_content, value_A, mv);
-
+        set_value(value_A, opA, opA_content, mv, error);
         //cambiamos el valor del CC(condition code
         change_cc(mv, value_A);
     } else
         *error = 3;
-
-
 }
 
 void SWAP(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-    int pointer;
-    if(opA == 0) { // Si el operando A es de memoria
-        pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_B, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_B, mv);
-    if(opB == 0) { // Si el operando B es de memoria
-        pointer = get_puntero(opB_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else if(opB == 2)  // Si el operando B es un registro
-        set_registro(opB_content,value_A, mv);
+    set_value(value_B, opA, opA_content, mv, error);
+    set_value(value_A, opB, opB_content, mv, error);
 }
 
 void AND(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-
     value_A &= value_B;
-
     // Guardamos el valor resultante de vuelta en el operando A
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_A,mv);
-
+    set_value(value_A, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code
     change_cc(mv, value_A);
 }
@@ -141,17 +92,9 @@ void OR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, in
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-
     value_A |= value_B;
-
     // Guardamos el valor resultante de vuelta en el operando A
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_A,mv);
-
+    set_value(value_A, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code)
     change_cc(mv, value_A);
 }
@@ -160,17 +103,9 @@ void XOR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-
     value_A ^= value_B;
-
     // Guardamos el valor resultante de vuelta en el operando A
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_A,mv);
-
+    set_value(value_A, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code
     change_cc(mv, value_A);
 }
@@ -179,7 +114,6 @@ void CMP(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-
     value_A -= value_B;
     //cambiamos el valor del CC(condition code)
     change_cc(mv, value_A);
@@ -189,18 +123,10 @@ void SHL(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-
     // Realizamos el desplazamiento lógico a la izquierda en A por el número de posiciones indicado en B
     value_A <<= value_B;
-
     // Guardamos el valor resultante de vuelta en el operando A
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_A,mv);
-
+    set_value(value_A, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code
     change_cc(mv, value_A);
 }
@@ -209,18 +135,10 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     // Obtenemos el valor del operando A y B
     int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-
     // Realizamos el desplazamiento lógico a la izquierda en A por el número de posiciones indicado en B
     value_A >>= value_B;
-
     // Guardamos el valor resultante de vuelta en el operando A
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_A,mv);
-
+    set_value(value_A, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code
     change_cc(mv, value_A);
 }
@@ -283,6 +201,7 @@ void SYS(struct VM* mv, int value,int *error) {
             for (int j = 0; j < cant_cells; j++) {
                 printf("[%04X] \t", index);
                 acum = 0;
+                /// 0000 0000 0000 0000 0000 0000 0000 0000
                 for (int k = 0; k < size_cells; k++) {
                     acum <<= 8;//se recupera cantidad de celda
                     acum |= (*mv).memory[index]; //se guarda el valor y se shiftea 1 byte a la izquierda
@@ -335,18 +254,11 @@ void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     int value_B =(int) value_op(opB_content, opB, *mv, error);
     srand(time(NULL));
     value_A =   rand()%value_B;
-
     // Guardamos el valor resultante de vuelta en el operando A
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value_A, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value_A,mv);
+    set_value(value_A, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code)
     change_cc(mv, value_A);
 }
-
 
 void JMP(struct VM* mv, int opA_content, char opA, int *error){
     int value_A =(int) value_op(opA_content, opA, *mv, error);
@@ -433,12 +345,7 @@ void LDH(struct VM* mv, int opA_content, char opA, int *error){
 void NOT(struct VM* mv, int opA_content, char opA, int *error){
     int value = (int)value_op(opA_content, opA, *mv, error);
     value = ~value;
-    if(opA == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(opA_content, *mv);
-        set_memoria(pointer, value, mv, 4, error);
-    }
-    else if(opA == 2)  // Si el operando A es un registro
-        set_registro(opA_content,value, mv);
+    set_value(value, opA, opA_content, mv, error);
     change_cc(mv, value);
 }
 
@@ -502,9 +409,12 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
             value = get_memoria(pointer, mv, error);
             break;
         }
-        case 1:  //caso inmediato
+        case 1: { //caso inmediato
+            if((op_content & 0x8000) == 0x8000)
+                op_content = (int)(0xFFFF0000 | op_content);
             value = op_content;
             break;
+        }
         case 2: //caso registro
             value = get_registro(op_content,mv);
             break;
@@ -561,6 +471,15 @@ void set_registro(int op,unsigned int valor, struct VM* mv){
             break;
         }
     }
+}
+
+void set_value(int value, char op, int op_content, struct VM *mv, int *error) {
+    if(op == 0) { // Si el operando A es de memoria
+        int pointer = get_puntero(op_content, *mv);
+        set_memoria(pointer, value, mv, 4, error);
+    }
+    else if(op == 2)  // Si el operando A es un registro
+        set_registro(op_content,value, mv);
 }
 
 void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB_content, char cod_op, int *error){

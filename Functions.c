@@ -207,10 +207,10 @@ void SYS(struct VM* mv, int value,int *error) {
                     acum |= (*mv).memory[index]; //se guarda el valor y se shiftea 1 byte a la izquierda
                     index++;
                 }
-                show_format_write(acum, format & 0X1, size_cells);
-                show_format_write(acum, format & 0X2, size_cells);
-                show_format_write(acum, format & 0X4, size_cells);
                 show_format_write(acum, format & 0X8, size_cells);
+                show_format_write(acum, format & 0X4, size_cells);
+                show_format_write(acum, format & 0X2, size_cells);
+                show_format_write(acum, format & 0X1, size_cells);
                 printf("\n");
             }
             break;
@@ -225,16 +225,17 @@ void show_format_write( int acum, char format, int size_cells) {
             break;
         }
         case 0x2:{
-            for (int i = 0; i < size_cells ; ++i) {
+            for (int i = size_cells-1; i >= 0 ; i--) {
                 int desplazamiento = 8 * i;
                 int mascara = 0xFF << desplazamiento;
                 int caracter = (acum & mascara) >> desplazamiento;
-                if ((caracter >= 32 && caracter <= 126) || (caracter >= 160 && caracter <= 255)) {
+                if (caracter >= 32 && caracter <= 126) {
                     printf("%c", caracter);
                 }
                 else
                     printf(".");
             }
+            printf(" ");
             break;
         }
         case 0x4:{
@@ -421,30 +422,31 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
     }
     return value;
 }
-unsigned int get_registro(int op, struct VM mv){ //obtiene el valor de un registro
-    int cod_reg, sec_reg;
-    unsigned int valor;
+unsigned int get_registro(int op, struct VM mv) {
+    int cod_reg, sec_reg, valor;
     sec_reg = (op >> 4);        //almacena el tipo de registro
     cod_reg = op & 0x0F;             //almacena el registro
     switch (sec_reg) {
         case 0:{
-                valor = mv.registers_table[cod_reg];
+            valor = mv.registers_table[cod_reg];
             break;
         }
         case 1:{
-            valor = mv.registers_table[cod_reg] & 0xFF;
+            char temp = mv.registers_table[cod_reg] & 0xFF;
+            valor = (temp & 0x80) ? (int)(temp | 0xFFFFFF00) : (int)temp;
             break;
         }
         case 2:{
-            valor = (mv.registers_table[cod_reg] & 0xFF00)>>8;
+            char temp = (mv.registers_table[cod_reg] & 0xFF00)>>8;
+            valor = (temp & 0x80) ? (int)(temp | 0xFFFFFF00) : (int)temp;
             break;
         }
         case 3:{
-            valor = mv.registers_table[cod_reg] & 0xFFFF;
+            unsigned short int temp = mv.registers_table[cod_reg] & 0xFFFF;
+            valor = (temp & 0x8000) ? (int)(temp | 0xFFFFFF00) : (int)temp;
             break;
         }
     }
-   // printf("\n valor a asignar EN REGISTRO 111 %08X", valor);
     return valor;
 }
 

@@ -16,5 +16,12 @@ typedef struct VM{
     int registers_table[16];
 }VirtualMachine;
 
+void set_SDT(struct VM *mv, unsigned int size_cs);
+void set_registers_table(struct VM *mv);
+void set_op(int *op_content, char op_size, struct VM* mv);
+void carga_regs(char regs_tags[0x40][4]);
+void carga_nemonics(char nemonicos_tags[0x20][5]);
+void dissasembler_func(struct  VM mv);
+void help_tables(struct VM mv);
 
 #endif //VIRTUAL_MACHINE_MAQUINA_VIRTUAL_H

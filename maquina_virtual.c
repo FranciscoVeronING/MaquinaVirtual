@@ -1,14 +1,95 @@
 #include "maquina_virtual.h"
 
-void set_SDT(struct VM *mv, unsigned int size_cs) {
-    (*mv).segment_descriptor_table[0].base = 0x0000;
-    (*mv).segment_descriptor_table[0].size = (short int)size_cs;
-    (*mv).segment_descriptor_table[1].base = (short int) size_cs;
-    (*mv).segment_descriptor_table[1].size = MEMORY_SIZE - size_cs;
+void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks, int size_mp, int *error){
+    if(size_ks+size_cs+size_es+size_ds+size_ds+size_ss > size_mp){
+        *error = 4;
+    }
+    else{
+        int index = 0, base = 0;
+        if(size_ks !=0){
+            (*mv).segment_descriptor_table[index].base = base;
+            (*mv).segment_descriptor_table[index].size = size_ks;
+            base += size_ks;
+            index++;
+        }
+        if(size_cs !=0){
+            (*mv).segment_descriptor_table[index].base = base;
+            (*mv).segment_descriptor_table[index].size = size_cs;
+            base += size_cs;
+            index++;
+        }
+        if(size_ds !=0){
+            (*mv).segment_descriptor_table[index].base = base;
+            (*mv).segment_descriptor_table[index].size = size_ds;
+            base += size_ds;
+            index++;
+        }
+        if(size_es !=0){
+            (*mv).segment_descriptor_table[index].base = base;
+            (*mv).segment_descriptor_table[index].size = size_es;
+            base += size_es;
+            index++;
+        }
+        if(size_ss !=0){
+            (*mv).segment_descriptor_table[index].base = base;
+            (*mv).segment_descriptor_table[index].size = size_ss;
+        }
+    }
 }
 
-void set_registers_table(struct VM *mv) {
-    (*mv).registers_table[0] = (*mv).segment_descriptor_table[0].base << 16; //corresponde a CS
+void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks) {
+    for (int index = 0; index < 16; ++index) {
+        switch (index) {
+            case 0:{
+                if(size_cs == 0)
+                    (*mv).registers_table[index] = -1;
+                else
+
+                break;
+            }
+            case 1:{
+                if(size_ds == 0)
+                    (*mv).registers_table[index] = -1;
+                else
+
+                break;
+            }
+            case 2:{
+                if(size_es == 0)
+                    (*mv).registers_table[index] = -1;
+                else
+
+                break;
+            }
+            case 3:{
+                if(size_ss == 0)
+                    (*mv).registers_table[index] = -1;
+                else
+
+                break;
+            }
+            case 4:{
+                if(size_ks == 0)
+                    (*mv).registers_table[index] = -1;
+                else
+
+                break;
+            }
+            case 5:{
+
+                break;
+            }
+            case 6:{
+
+                break;
+            }
+            default:{
+                (*mv).registers_table[index] = 0;
+                break;
+            }
+        }
+    }
+  /*  (*mv).registers_table[0] = (*mv).segment_descriptor_table[0].base << 16; //corresponde a CS
     (*mv).registers_table[1] = 0x00010000 ; //corresponde a DS
     (*mv).registers_table[2] = 0;
     (*mv).registers_table[3] = 0;
@@ -23,7 +104,7 @@ void set_registers_table(struct VM *mv) {
     (*mv).registers_table[12] = 0;
     (*mv).registers_table[13] = 0;
     (*mv).registers_table[14] = 0;
-    (*mv).registers_table[15] = 0;
+    (*mv).registers_table[15] = 0;*/
 }
 
 void set_op(int *op_content, char op_size, struct VM* mv) {

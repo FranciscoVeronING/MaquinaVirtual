@@ -6,7 +6,7 @@
 
 
 typedef struct segments_descriptors{
-    short int base, size;
+    unsigned short int base, size;
 }SegmentsDescriptors;
 
 typedef struct VM{
@@ -15,7 +15,7 @@ typedef struct VM{
     int registers_table[16];
 }VirtualMachine;
 
-void set_SDT(struct VM *mv, unsigned int size_cs);
+void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks, int size_mp, int *error);
 void set_registers_table(struct VM *mv);
 void set_op(int *op_content, char op_size, struct VM* mv);
 void carga_regs(char regs_tags[0x40][4]);

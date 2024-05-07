@@ -7,6 +7,7 @@
 int main(int argc, char *argv[]) {
 /// arg[0] = .exe; arg[1] .vmx arg[2] "-d"
     struct VM mv;
+    int error = 0;
     char *filename_vmx = NULL;
     char *filename_vmi = NULL;
     char *option_m = NULL;
@@ -14,12 +15,12 @@ int main(int argc, char *argv[]) {
     FILE *file_mv_vmx;
     FILE *file_mv_vmi;
 
-    unsigned short int size_cs;
-    unsigned short int size_ds;
-    unsigned short int size_es;
-    unsigned short int size_ss;
-    unsigned short int size_ks;
-    unsigned short int offset_entry_point;
+    unsigned short int size_cs = 0;
+    unsigned short int size_ds = 0;
+    unsigned short int size_es = 0;
+    unsigned short int size_ss = 0;
+    unsigned short int size_ks = 0;
+    unsigned short int offset_entry_point = 0;
 
     char *filename_vmx_content;
     char *filename_vmi_content;
@@ -62,8 +63,9 @@ int main(int argc, char *argv[]) {
                     fread(&size_ss, sizeof(unsigned short int), 1, file_mv_vmx);
                     fread(&size_ks, sizeof(unsigned short int), 1, file_mv_vmx);
                     fread(&offset_entry_point, sizeof(unsigned short int), 1, file_mv_vmx);
-                } else if (version == '1') {
-                    fread(&size_cs, sizeof(unsigned short int), 1, file_mv_vmx);
+                } else
+                    if (version == '1') {
+                        fread(&size_cs, sizeof(unsigned short int), 1, file_mv_vmx);
                 }
             }
             ///preguntar si estaria bien hacer esto
@@ -105,7 +107,7 @@ int main(int argc, char *argv[]) {
         }
         size_memory_p = atoi(aux);
     }
-    set_SDT(mv, )
+    set_SDT(&mv, size_cs, size_ds, size_es, size_ss, size_ks, size_memory_p, &error);
     mv.memory = (unsigned char *) malloc(size_memory_p * sizeof(unsigned char));
 
     /*

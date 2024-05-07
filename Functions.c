@@ -623,6 +623,9 @@ void Errores(int error){
     * error = 2 Caida de segmento
     * error = 3 Division por Cero
     * error = -1 flag del STOP
+    * error = 4 Memoria insuficiente
+    * error = 5 Stack Overflow
+    * error = 6 Stack Underflow
     */
     switch(error){
         case 1: {
@@ -635,6 +638,18 @@ void Errores(int error){
         }
         case 3: {
             printf("\nError: Division por Cero");
+            break;
+        }
+        case 4: {
+            printf("\nError: Memoria insuficiente");
+            break;
+        }
+        case 5: {
+            printf("\nError: Stack Overflow");
+            break;
+        }
+        case 6: {
+            printf("\nError: Stack Underflow");
             break;
         }
     }

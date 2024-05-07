@@ -137,12 +137,12 @@ void dissasembler_func(struct  VM mv){
 void carga_regs(char regs_tags[0x40][4]){
     strcpy( regs_tags[0], "CS");
     strcpy( regs_tags[1], "DS");
-    strcpy( regs_tags[2], "S/U");
-    strcpy( regs_tags[3], "S/U");
-    strcpy( regs_tags[4], "S/u");
+    strcpy( regs_tags[2], "ES");
+    strcpy( regs_tags[3], "SS");
+    strcpy( regs_tags[4], "KS");
     strcpy( regs_tags[5], "IP");
-    strcpy( regs_tags[6], "S/u");
-    strcpy( regs_tags[7], "S/u");
+    strcpy( regs_tags[6], "SP");
+    strcpy( regs_tags[7], "BP");
     strcpy( regs_tags[8], "CC");
     strcpy( regs_tags[9], "AC");
     strcpy( regs_tags[0xA], "EAX");
@@ -196,6 +196,10 @@ void carga_nemonics(char nemonicos_tags[0x20][5]){
     strcpy(nemonicos_tags[0x18],"LDL");
     strcpy(nemonicos_tags[0x19],"LDH");
     strcpy(nemonicos_tags[0x1A],"NOT");
+    strcpy(nemonicos_tags[0x1B],"PUSH");
+    strcpy(nemonicos_tags[0x1C],"POP");
+    strcpy(nemonicos_tags[0x1D],"CALL");
+    strcpy(nemonicos_tags[0x1E],"RET");
     strcpy(nemonicos_tags[0x1F],"STOP");
 }
 

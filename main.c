@@ -6,27 +6,92 @@
 
 int main(int argc, char *argv[]) {
 /// arg[0] = .exe; arg[1] .vmx arg[2] "-d"
-    FILE *file_mv;
-    int dissasembler = 0; //flag de disassembler
     struct VM mv;
+    char *filename_vmx = NULL;
+    char *filename_vmi = NULL;
+    char *option_m = NULL;
+    int dissassembler_flag = 0;
+    FILE *file_mv_vmx;
+    FILE *file_mv_vmi;
 
-    if(argv[2] && strcmp(argv[2],"-d") == 0)
-        dissasembler = 1;
-    //apertura de archivo
-    file_mv = fopen(argv[1], "rb");
-    if (file_mv == NULL) {
-        perror("Error al abrir el archivo ");
-        return 1;
+    unsigned short int size_cs;
+    unsigned short int size_ds;
+    unsigned short int size_es;
+    unsigned short int size_ss;
+    unsigned short int size_ks;
+    unsigned short int offset_entry_point;
+
+    for (int i = 1; i < argc; i++) {
+        if (strstr(argv[i], ".vmx") != NULL) {
+            filename_vmx = argv[i];
+        }
+        else if (strstr(argv[i], ".vmi") != NULL) {
+            filename_vmi = argv[i];
+        }
+        else if (strncmp(argv[i], "m=", 2) == 0) {
+            option_m = argv[i];
+        }
+        else if (strcmp(argv[i], "-d") == 0) {
+            dissassembler_flag = 1;
+        }
     }
-   unsigned char header[8];
-    // Leer los primeros 6 bytes del archivo
-    fread(&header,sizeof(unsigned char),8,file_mv);
-    //Valida que la cabecera del archivo esta bien
-    if(strncmp(header,"VMX24",5) != 0){// O PONER header != 0xVMX241
-        perror("Error al abrir el archivo , header erroneo");
-        fclose(file_mv);
-        return 1;
+    if( *filename_vmx ){       //si hay un arhivo .vmx
+        file_mv_vmx = fopen(filename_vmx, "rb");
+        if (file_mv_vmx == NULL) {
+            perror("Error al abrir el archivo .vmx \n");
+            return 1;
+        }
+        else{
+            unsigned char header[5];
+            // Leer los primeros 6 bytes del archivo
+            fread(&header,sizeof(unsigned char),5,file_mv_vmx);
+            //Valida que la cabecera del archivo esta bien
+            if(strncmp(header,"VMX24",5) != 0){// O PONER header != 0xVMX241
+                perror("Error al abrir el archivo , header erroneo");
+                fclose(file_mv_vmx);
+                return 1;
+            }
+            else{
+                unsigned char version;
+                fread(&version,sizeof(unsigned char),1,file_mv_vmx);
+                if(version == '2'){
+                    fread(&size_cs,sizeof(unsigned short int),1,file_mv_vmx);
+                    fread(&size_ds,sizeof(unsigned short int),1,file_mv_vmx);
+                    fread(&size_es,sizeof(unsigned short int),1,file_mv_vmx);
+                    fread(&size_ss,sizeof(unsigned short int),1,file_mv_vmx);
+                    fread(&size_ks,sizeof(unsigned short int),1,file_mv_vmx);
+                    fread(&offset_entry_point,sizeof(unsigned short int),1,file_mv_vmx);
+                }
+                else if(version == '1'){
+                    fread(&size_cs,sizeof(unsigned short int),1,file_mv_vmx);
+                }
+            }
+            fclose(file_mv_vmx);
+        }
     }
+    if( *filename_vmi ){
+        file_mv_vmi = fopen(filename_vmi, "rb");
+        if (file_mv_vmi == NULL) {
+            perror("Error al abrir el archivo .vmi \n");
+            return 1;
+        }
+        unsigned char header[6];
+        fread(&header,sizeof(unsigned char),5,file_mv_vmi);
+        if (strncmp(header,"VMI24",5) != 0){
+            perror("Error al abrir el archivo , header erroneo");
+            fclose(file_mv_vmx)
+            return 1;
+        }
+        else {
+            unsigned short int size_memory;
+            fread(&size_memory, sizeof(unsigned short int), 1, file_mv_vmi);
+
+    }
+
+
+    //.vmi
+
+    /*
     else{
         //COMIENZO DE CARGA DE ARCHIVO EN CS (Code Segment)
         //Creacion de tabla de descriptores de segmentos
@@ -80,6 +145,6 @@ int main(int argc, char *argv[]) {
         }
         Errores(error);
     }
-    if(dissasembler)
+    if(dissassembler_flag == 1)
         dissasembler_func(mv);
 }

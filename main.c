@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
         for (int i = 2; i < strlen(option_m); ++i) {
             aux[i] = option_m[i];
         }
-        size_memory_p = atoi(aux);
+        size_memory_p = atoi(aux) * 1024;
     }
     set_SDT(&mv, size_cs, size_ds, size_es, size_ss, size_ks, size_memory_p, &error);
     mv.memory = (unsigned char *) malloc(size_memory_p * sizeof(unsigned char));

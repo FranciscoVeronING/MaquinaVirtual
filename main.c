@@ -54,9 +54,9 @@ int main(int argc, char *argv[]) {
                 fclose(file_mv_vmx);
                 return 1;
             } else {
-                unsigned char version;
+                int version;
                 fread(&version, sizeof(unsigned char), 1, file_mv_vmx);
-                if (version == '2') {
+                if (version == 2) {
                     fread(&size_cs, sizeof(unsigned short int), 1, file_mv_vmx);
                     fread(&size_ds, sizeof(unsigned short int), 1, file_mv_vmx);
                     fread(&size_es, sizeof(unsigned short int), 1, file_mv_vmx);
@@ -64,11 +64,10 @@ int main(int argc, char *argv[]) {
                     fread(&size_ks, sizeof(unsigned short int), 1, file_mv_vmx);
                     fread(&offset_entry_point, sizeof(unsigned short int), 1, file_mv_vmx);
                 } else
-                    if (version == '1') {
+                    if (version == 1) {
                         fread(&size_cs, sizeof(unsigned short int), 1, file_mv_vmx);
                 }
             }
-            ///preguntar si estaria bien hacer esto
             int j= 0;
             while (!feof(file_mv_vmx)) {
                 fread(&filename_vmx_content[j], sizeof(unsigned char), 1, file_mv_vmx);
@@ -109,6 +108,7 @@ int main(int argc, char *argv[]) {
     }
     set_SDT(&mv, size_cs, size_ds, size_es, size_ss, size_ks, size_memory_p, &error);
     mv.memory = (unsigned char *) malloc(size_memory_p * sizeof(unsigned char));
+    set_registers_table(&mv,size_cs,size_ds,size_es,size_ss,size_ks, offset_entry_point);
 
     /*
     else{

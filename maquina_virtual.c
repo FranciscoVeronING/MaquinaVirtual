@@ -37,57 +37,41 @@ void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_
     }
 }
 
-void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks) {
-    for (int index = 0; index < 16; ++index) {
-        switch (index) {
-            case 0:{
-                if(size_cs == 0)
-                    (*mv).registers_table[index] = -1;
-                else
-
-                break;
-            }
-            case 1:{
-                if(size_ds == 0)
-                    (*mv).registers_table[index] = -1;
-                else
-
-                break;
-            }
-            case 2:{
-                if(size_es == 0)
-                    (*mv).registers_table[index] = -1;
-                else
-
-                break;
-            }
-            case 3:{
-                if(size_ss == 0)
-                    (*mv).registers_table[index] = -1;
-                else
-
-                break;
-            }
-            case 4:{
-                if(size_ks == 0)
-                    (*mv).registers_table[index] = -1;
-                else
-
-                break;
-            }
-            case 5:{
-
-                break;
-            }
-            case 6:{
-
-                break;
-            }
-            default:{
-                (*mv).registers_table[index] = 0;
-                break;
-            }
-        }
+void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks, unsigned short int offset_entry_point) {
+    int index = 0;
+    if(size_ks == 0)
+        (*mv).registers_table[index] = -1;
+    else
+        (*mv).registers_table[index] = index<<16;
+    index++;
+    if(size_cs == 0) {
+        (*mv).registers_table[index] = -1;
+    }
+    else {
+        (*mv).registers_table[index] = index << 16;
+        (*mv).registers_table[5] = (index << 16) + offset_entry_point; //El registro IP apunta a CS
+    }
+    index++;
+    if(size_ds == 0)
+        (*mv).registers_table[index] = -1;
+    else
+        (*mv).registers_table[index] = index<<16;
+    index++;
+    if(size_es == 0)
+        (*mv).registers_table[index] = -1;
+    else
+        (*mv).registers_table[index] = index<<16;
+    index++;
+    if(size_ss == 0) {
+        (*mv).registers_table[index] = -1;
+        (*mv).registers_table[6] = -1;
+    }
+    else {
+        (*mv).registers_table[index] = index << 16;
+        (*mv).registers_table[6] =  (index << 16) + (*mv).segment_descriptor_table[index].size; //el registro Sp apunta altope de la pila
+    }
+    for (index = 7 ; index < 16; ++index) {
+            (*mv).registers_table[index] = 0;
     }
   /*  (*mv).registers_table[0] = (*mv).segment_descriptor_table[0].base << 16; //corresponde a CS
     (*mv).registers_table[1] = 0x00010000 ; //corresponde a DS

@@ -3,6 +3,8 @@
 #include <time.h>
 #include "Functions.h"
 
+int op_content_size(int content);
+
 void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB, int *error){
     switch (opA) {
         case 0b00: {
@@ -358,7 +360,7 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error){
     // decrementa el valor del registro SP en 4
     mv->registers_table[6] -= 4;
     // verifica si el SP está dentro de los límites de la pila
-    if(mv->registers_table[6] < mv->segment_descriptor_table[3].base)
+    if(mv->registers_table[6] < mv->segment_descriptor_table[3].base)///los indices son dinamicos, hay que cambiarlo
         *error = 5; // stack Overflow
     // saca el valor del operando
     int value = (int)value_op(opA_content, opA, *mv, error);
@@ -369,7 +371,7 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error){
 
 void POP(struct VM* mv, int opA_content, char opA, int *error){
     // veficia si hay suficientes bytes en la pila || si esta vacia
-    if(mv->registers_table[6] < mv->segment_descriptor_table[3].base + 4 || mv->registers_table[7] == mv->registers_table[6] )
+    if(mv->registers_table[6] < mv->segment_descriptor_table[3].base + 4 || mv->registers_table[7] == mv->registers_table[6] )///los indices son dinamicos, hay que cambiarlo
         *error = 6; // Stack Underflow
     // extrae 4 bytes desde el tope de la pila
     int value = get_memoria(mv->registers_table[6], *mv, error);
@@ -377,6 +379,12 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
     set_value(value, opA, opA_content, mv, error);
     // aumenta el valor del SP en 4
     mv->registers_table[6] += 4;
+}
+
+void RET(struct VM *mv, int *error){
+    char ip = 0b00000101;
+    unsigned int ip_content = value_op((*mv).registers_table[5],ip,(*mv),error);
+    POP(mv, (int)ip_content, ip,error);
 }
 
 int get_puntero(int op_content,struct VM mv){
@@ -431,6 +439,7 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
     switch(op_type){
         case 0: {   //caso de memoria
             /// 0000 xxxx 11111111 11111111
+            op_content = op_content_size(op_content);
             int pointer = get_puntero(op_content,mv);
             value = get_memoria(pointer, mv, error);
             break;
@@ -447,6 +456,24 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
     }
     return value;
 }
+
+int op_content_size(int content) { //me indica cuantos byte debo extraer del contenido
+    char type = (char)((content >> 22) & 0b00000011);
+    switch (type) {
+        case 2:{
+            content = content & 0x0000ffff; // (short int) content;
+            break;
+        }
+        case 3:{
+            content = content & 0x000000ff; // (char) content;
+            break;
+        }
+        default:
+            break;
+    }
+    return content;
+}
+
 unsigned int get_registro(int op, struct VM mv) {
     int cod_reg, sec_reg, valor;
     sec_reg = (op >> 4);        //almacena el tipo de registro

@@ -16,7 +16,7 @@ typedef struct VM{
 }VirtualMachine;
 
 void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks, int size_mp, int *error);
-void set_registers_table(struct VM *mv);
+void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks, unsigned short int offset_entry_point);
 void set_op(int *op_content, char op_size, struct VM* mv);
 void carga_regs(char regs_tags[0x40][4]);
 void carga_nemonics(char nemonicos_tags[0x20][5]);

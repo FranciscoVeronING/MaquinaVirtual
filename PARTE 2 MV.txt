@@ -1,6 +1,6 @@
--Agregar 3 segmentos, 2 ES, 3 SS , 4 KS
--Definir 3 2 registros 6 SP y 7 BP 
--Modificar tabla descriptora de segmento (es dinamica)
+-Agregar 3 segmentos, 2 ES, 3 SS , 4 KS     LISTO
+-Definir 2 registros 6 SP y 7 BP            LISTO
+-Modificar tabla descriptora de segmento (es dinamica)      LISTO? REVISAR SI ESTA TERMINADA
 opcional: Asignarle posicion a constante Cs, ds, es... etc...
 -Agregar directivas:
 	-Include, el codigo se inserta en el lugar de la directiva.
@@ -11,14 +11,14 @@ opcional: Asignarle posicion a constante Cs, ds, es... etc...
 	-Constantes Inmediatas (EQU). (a fren se le ocurrio plantearlas en un vector)
 	-Constantes Strings, permite almacenar una cadena de caracteres en KS y el offset se almacena en el segmento.
 -Agregar a SYS:
-	-3 almacena en un rango de celdas de memoria un string ingresado por teclado.
-	-4 imprime por pantalla el rango de celdas que almacena un string. El cursor queda una linea por debajo.
-	-7 Limpia la pantalla de la consola.
+	-3 almacena en un rango de celdas de memoria un string ingresado por teclado.   LISTO
+	-4 imprime por pantalla el rango de celdas que almacena un string. El cursor queda una linea por debajo. LISTO
+	-7 Limpia la pantalla de la consola.    LISTO
 	-F Pausa la ejecucion y genera un archivo imagen en el estado actual de la mv.
 -Operando de memoria: Se le agrega un modificador a la izquierda de [], la cantidad de bytes a acceder.
 Gestion pila:
 	-Agregar trabajo con registros.
-	-Instrucciones:
+	-Instrucciones: LISTAS, PUEDEN TENER FALLAS
 		-Push: Almacena un dato de 4 bytes al tope de la pila
 		-Pop: Extrae el dato del tope de la pila y lo lmacena en el unico operando.
 		-Call: LLama a una subrutina.

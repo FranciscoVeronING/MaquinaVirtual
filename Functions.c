@@ -3,6 +3,10 @@
 #include <time.h>
 #include "Functions.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 int op_content_size(int content);
 
 void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB, int *error){
@@ -145,7 +149,7 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     change_cc(mv, value_A);
 }
 
-void SYS(struct VM* mv, int value,int *error) {
+void SYS(struct VM* mv, int value, int *error) {
     char format = (char) ((*mv).registers_table[0xA] & 0x000000FF); // obtenemos el formato que esta en AL
     int cant_cells =  ((*mv).registers_table[0xC] & 0x000000FF);  // obtenemos la cantidad de celdas, esta en CL
     int size_cells =  (((*mv).registers_table[0xC] >> 8) & 0x000000FF); //obtenemos el tamaño de las celdas, esta en CH
@@ -216,6 +220,48 @@ void SYS(struct VM* mv, int value,int *error) {
                 printf("\n");
             }
             break;
+        }
+        case 3:{
+            int index = get_puntero(0x0D0000, *mv);          //obtiene la dirección de memoria del registro EDX (CREO)
+            int max_chars = mv->registers_table[0xC];       //obtiene la cantidad máxima de caracteres a leer desde CX
+            char input;
+            int count = 0;
+            while ((max_chars == -1 || count < max_chars) && (input = getchar()) != '\n') {
+                mv->memory[index] = input;  //almacena el char en la direccion de memoria actual
+                index++;
+                count++;
+            }
+            break;
+        }
+        case 4:{
+            int index = get_puntero(0x0D0000, *mv);     //obtiene la dirección de memoria del registro EDX (CREO)
+            while (mv->memory[index] != '\0') {
+                printf("%c", mv->memory[index]);
+                index++;
+            }
+            printf("\n");
+            break;
+        }
+        case 7:{       //Limpia la terminal
+            #ifdef _WIN32
+                system("cls");
+            #else
+                system("clear");
+            #endif
+            break;
+        }
+        case 0x46:{     //BreakPoint
+            char input = getchar();
+            switch(input) {
+                case 'g': // continua la ejecución
+                    break;
+                case 'q': // aborta la ejecución
+                    *error = -1; // Asume que -1 es el código de error para abortar la ejecución
+                    break;
+                case '\n': // ejecuta la siguiente instrucción y vuelve a pausar
+
+                    break;
+            }
         }
     }
 }
@@ -379,6 +425,13 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
     set_value(value, opA, opA_content, mv, error);
     // aumenta el valor del SP en 4
     mv->registers_table[6] += 4;
+}
+
+void CALL(struct VM* mv, int opB_content, char opB, int *error){
+    // pushea el valor actual de IP en la pila
+    PUSH(mv, (*mv).registers_table[5], opB, error);
+    // salta a la direccion dada por el operando
+    JMP(mv, opB_content, opB, error);
 }
 
 void RET(struct VM *mv, int *error){
@@ -658,8 +711,28 @@ void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB
             NOT(mv,opB_content, opB, error);
             break;
         }
+        case 0x1B:{
+            //printf("entra a PUSH");
+            PUSH(mv,opB_content, opB, error);
+            break;
+        }
+        case 0x1C:{
+            //printf("entra a POP");
+            POP(mv,opB_content, opB, error);
+            break;
+        }
+        case 0x1D:{
+            //printf("entra a CALL");
+            CALL(mv, opB_content, opB, error);
+            break;
+        }
+        case 0x1E:{
+            //printf("entra a RET");
+            RET(mv, error);
+            break;
+        }
         case 0x1F:{
-           // printf("entra a STOP");
+            // printf("entra a STOP");
             STOP(error);
             break;
         }

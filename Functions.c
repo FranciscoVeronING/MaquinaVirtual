@@ -149,7 +149,7 @@ void SHR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     change_cc(mv, value_A);
 }
 
-void SYS(struct VM* mv, int value, int *error) {
+void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, char* filename_vmi) {
     char format = (char) ((*mv).registers_table[0xA] & 0x000000FF); // obtenemos el formato que esta en AL
     int cant_cells =  ((*mv).registers_table[0xC] & 0x000000FF);  // obtenemos la cantidad de celdas, esta en CL
     int size_cells =  (((*mv).registers_table[0xC] >> 8) & 0x000000FF); //obtenemos el tamaño de las celdas, esta en CH
@@ -251,16 +251,24 @@ void SYS(struct VM* mv, int value, int *error) {
             break;
         }
         case 0x46:{     //BreakPoint
-            char input = getchar();
-            switch(input) {
-                case 'g': // continua la ejecución
-                    break;
-                case 'q': // aborta la ejecución
-                    *error = -1; // Asume que -1 es el código de error para abortar la ejecución
-                    break;
-                case '\n': // ejecuta la siguiente instrucción y vuelve a pausar
-
-                    break;
+            if(filename_vmi) {            //si existe archivo vmi
+                modifica_vmi(mv, filename_vmi);//EN ESTA LINEA HAY QUE LLAMAR UNA FUNCION QUE ARME EL .VMI, FALTA HACER ESO
+                char input = getchar();
+                switch (input) {
+                    case 'g': { // continua la ejecución
+                        *flag_break_point = 0;
+                        break;
+                    }
+                    case 'q': {// aborta la ejecución
+                        *flag_break_point = 0;
+                        *error = -1; // Asume que -1 es el código de error para abortar la ejecución
+                        break;
+                    }
+                    case '\n': { // ejecuta la siguiente instrucción y vuelve a pausar
+                        *flag_break_point = 1;
+                        break;
+                    }
+                }
             }
         }
     }
@@ -522,6 +530,9 @@ int op_content_size(int content) { //me indica cuantos byte debo extraer del con
             break;
         }
         default:
+            content = content & 0x0000ffff;
+            if ((content & 0x8000) == 0x8000)
+                content =(int)(content | 0xffff0000);
             break;
     }
     return content;
@@ -589,7 +600,7 @@ void set_value(int value, char op, int op_content, struct VM *mv, int *error) {
         set_registro(op_content,value, mv);
 }
 
-void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB_content, char cod_op, int *error){
+void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB_content, char cod_op, int *error, unsigned int *flag_break_point, char* filename_vmi){
     switch (cod_op) {
         case 0:{
             //printf("entra a mov");
@@ -658,7 +669,7 @@ void llamado_funcion(struct VM* mv, char opA, int opA_content, char opB, int opB
         }
         case 0x10:{
            // printf("entra a SYS");
-            SYS(mv, opB_content, error);
+            SYS(mv, opB_content, error, flag_break_point, filename_vmi);
             break;
         }
         case 0x11:{
@@ -788,4 +799,26 @@ void change_cc(struct  VM* mv, int value_A){
         (*mv).registers_table[8] = 0x40000000;
     else
         (*mv).registers_table[8] = 0x00000000;
+}
+
+void modifica_vmi(struct VM* mv, char* filename_vmi){
+    unsigned int size_memory;
+    FILE *file_mv_vmi;
+    file_mv_vmi = fopen(filename_vmi, "wb");
+    if (file_mv_vmi == NULL) {
+        perror("Error al abrir el archivo .vmi \n");
+        return;
+    }
+    fseek(file_mv_vmi, 5, SEEK_SET);    //ME MUEVO DESPUES DEL HEADER ASI PUEDO LEER LA MEMORIA
+    fread(&size_memory, sizeof(unsigned short int), 1, file_mv_vmi);
+    // REGISTROS
+    fwrite(mv->registers_table, sizeof(int), 16, file_mv_vmi);
+    // SDT
+    for (int i = 0; i < 8; ++i) {
+        fwrite(&(mv->segment_descriptor_table[i].base), sizeof(int), 1, file_mv_vmi);
+        fwrite(&(mv->segment_descriptor_table[i].size), sizeof(int), 1, file_mv_vmi);
+    }
+    // MEMORIA
+    fwrite(mv->memory, sizeof(char), size_memory, file_mv_vmi);
+    fclose(file_mv_vmi);
 }

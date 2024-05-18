@@ -21,9 +21,16 @@ int main(int argc, char *argv[]) {
     unsigned short int size_ss = 0;
     unsigned short int size_ks = 0;
     unsigned short int offset_entry_point = 0;
+    unsigned int flag_break_point = -1; // -1 si no existe archivo vmi, 0 si existe, 1 cuando se ejecuta la instruccion SYS y se debugea paso a paso
 
     char *filename_vmx_content;
     char *filename_vmi_content;
+
+    int size_memory_p = 16384;
+
+    ///variables para .vmi
+    char *registers, *segments_descriptors, *memory;
+    unsigned short int size_memory;
 
     for (int i = 1; i < argc; i++) {
         if (strstr(argv[i], ".vmx") != NULL) {
@@ -35,6 +42,15 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(argv[i], "-d") == 0) {
             dissassembler_flag = 1;
         }
+    }
+
+    /// Lectura de tamaño de Memoria, solo parametro M para vmx? o para vmi tambien es valido?
+    char *aux;
+    if (option_m) {
+        for (int i = 2; i < strlen(option_m); ++i) {
+            aux[i] = option_m[i];
+        }
+        size_memory_p = atoi(aux) * 1024;
     }
 
     ///Lectura de .vmx
@@ -80,6 +96,7 @@ int main(int argc, char *argv[]) {
     ///Lectura de .vmi
 
     if (filename_vmi) {
+        flag_break_point = 0;
         file_mv_vmi = fopen(filename_vmi, "rb");
         if (file_mv_vmi == NULL) {
             perror("Error al abrir el archivo .vmi \n");
@@ -92,23 +109,56 @@ int main(int argc, char *argv[]) {
             fclose(file_mv_vmi);
             return 1;
         } else {
-            unsigned short int size_memory;
-            fread(&size_memory, sizeof(unsigned short int), 1, file_mv_vmi);
+            fread(&size_memory, sizeof(unsigned short int), 1, file_mv_vmi); ///preguntar para que corno se usa
+            fread(registers, sizeof(char), 64, file_mv_vmi);
+            fread(segments_descriptors, sizeof(char) , 32, file_mv_vmi);
+            while (!feof(file_mv_vmi))                                      ///prguntar diferencia con la otra ↑
+                fread(memory, sizeof(char), 1, file_mv_vmi);
+
+            fclose(file_mv_vmi);
         }
     }
 
-    /// Lectura de tamaño de Memoria
-    char *aux;
-    int size_memory_p = 16384;
-    if (option_m) {
-        for (int i = 2; i < strlen(option_m); ++i) {
-            aux[i] = option_m[i];
+    if(filename_vmx == NULL && filename_vmi){
+        ///copia de Registers_Table
+        char *aux;
+        int count = 0;
+        for (int i = 0; i < 16; ++i) {
+            aux = NULL;
+            strncpy(aux,(registers + (4*count)),4);
+            mv.registers_table[i] = atoi(aux);
+            count++;
         }
-        size_memory_p = atoi(aux) * 1024;
+        ///copia de Segments_Descriptor_Table
+        aux = NULL;
+        count = 0;
+        for (int i = 0; i < 8; ++i) {
+            aux = NULL;
+            strncpy(aux,(segments_descriptors + (2*count)),2);
+            mv.segment_descriptor_table[i].base = (unsigned short int)atoi(aux);
+            aux = NULL;
+            count++;
+            strncpy(aux,(segments_descriptors + (2*count)),2);
+            mv.segment_descriptor_table[i].size = (unsigned short int)atoi(aux);
+            count++;
+        }
+        aux = NULL;
+        count = 0;
+        while (count < strlen(memory)){
+            strncpy((aux+count),(segments_descriptors+count),1);
+            count++;
+        }
+        size_memory_p = (unsigned int)atoi(aux);
     }
-    set_SDT(&mv, size_cs, size_ds, size_es, size_ss, size_ks, size_memory_p, &error);
+
+    if (filename_vmx) {
+        set_SDT(&mv, size_cs, size_ds, size_es, size_ss, size_ks, size_memory_p, &error);
+        set_registers_table(&mv, size_cs, size_ds, size_es, size_ss, size_ks, offset_entry_point);
+    }
+
     mv.memory = (unsigned char *) malloc(size_memory_p * sizeof(unsigned char));
-    set_registers_table(&mv,size_cs,size_ds,size_es,size_ss,size_ks, offset_entry_point);
+
+
 
     /*
     else{
@@ -164,8 +214,15 @@ int main(int argc, char *argv[]) {
         }
         Errores(error);
     }
-
     */
+    if (flag_break_point){
+        llamado_funcion( &mv, opA, opA_content, opB, opB_content, cod_op, &error, filename_vmi);
+        SYS(&mv, 0x46, &error, &flag_break_point, filename_vmi);
+    }
+    else
+        llamado_funcion( &mv, opA, opA_content, opB, opB_content, cod_op, &error, filename_vmi);
+
+
     if(dissassembler_flag == 1)
         dissasembler_func(mv);
 

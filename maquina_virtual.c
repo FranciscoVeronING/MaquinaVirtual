@@ -1,5 +1,7 @@
 #include "maquina_virtual.h"
 
+unsigned char setlabel(int content);
+
 void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks, int size_mp, int *error){
     if(size_ks+size_cs+size_es+size_ds+size_ds+size_ss > size_mp){
         *error = 4;
@@ -156,12 +158,13 @@ void dissasembler_func(struct  VM mv){
 
         switch (opA) {
             case 0: {    //memoria
-                registro = opA_content >> 16;
+
+                registro = (opA_content >> 16) & 0x00000f;
                 offset = opA_content & 0x00FFFF;
                 if (offset == 0)
-                    printf("[%s]", regs_tags[registro]);
+                    printf("%c[%s]", setlabel(opA_content),regs_tags[registro]);
                 else
-                    printf("[%s+%d]", regs_tags[registro], offset);
+                    printf("%c[%s+%d]", setlabel(opA_content), regs_tags[registro], offset);
                 break;
             }
             case 1: {    //inmediato
@@ -177,12 +180,12 @@ void dissasembler_func(struct  VM mv){
             printf(",");
         switch (opB) {
             case 0: {    //memoria
-                registro = opB_content >> 16;
+                registro = (opB_content >> 16) & 0x00000f;
                 offset = opB_content & 0x00FFFF;
                 if (offset == 0)
-                    printf(" [%s]", regs_tags[registro]);
+                    printf("%c[%s]", setlabel(opB_content),regs_tags[registro]);
                 else
-                    printf(" [%s+%d]", regs_tags[registro], offset);
+                    printf("%c[%s+%d]", setlabel(opB_content), regs_tags[registro], offset);
                 break;
             }
             case 1: {    //inmediato
@@ -197,6 +200,28 @@ void dissasembler_func(struct  VM mv){
         }
         pos_act++;
     }
+}
+
+unsigned char setlabel(int content) {
+    content >>= 20;
+    content = (char)(content & 0x0f);
+
+    char aux;
+    switch (content) {
+        case 0 : {
+             aux = 'l';
+             break;
+        }
+        case 2:{
+            aux = 'w';
+            break;
+        }
+        default:{
+            aux = 'b';
+            break;
+        }
+    }
+    return aux;
 }
 
 void carga_regs(char regs_tags[0x40][4]){

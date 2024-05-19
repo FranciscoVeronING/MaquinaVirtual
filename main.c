@@ -4,6 +4,8 @@
 #include "Functions.c"
 #include "maquina_virtual.c"
 
+
+
 int main(int argc, char *argv[]) {
 /// arg[0] = .exe; arg[1] .vmx arg[2] "-d"
     struct VM mv;
@@ -20,7 +22,7 @@ int main(int argc, char *argv[]) {
     unsigned short int size_es = 0;
     unsigned short int size_ss = 0;
     unsigned short int size_ks = 0;
-    unsigned short int offset_entry_point = 0;
+    unsigned short int offset_entry_point;
     unsigned int flag_break_point = -1; // -1 si no existe archivo vmi, 0 si existe, 1 cuando se ejecuta la instruccion SYS y se debugea paso a paso
 
     char *filename_vmx_content;
@@ -228,3 +230,5 @@ int main(int argc, char *argv[]) {
 
     free(mv.memory);
 }
+
+

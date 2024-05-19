@@ -1,6 +1,6 @@
 #include "maquina_virtual.h"
 
-unsigned char setlabel(int content);
+
 
 void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks, int size_mp, int *error){
     if(size_ks+size_cs+size_es+size_ds+size_ds+size_ss > size_mp){
@@ -111,10 +111,39 @@ void dissasembler_func(struct  VM mv){
     char nemonicos_tags[0X20][5];
     carga_regs(regs_tags);
     carga_nemonics(nemonicos_tags);
-    unsigned int pos_act =  (mv.segment_descriptor_table[0].base);
+
     char opA, opB, cod_op;
     int opA_size, opB_size, j, opA_content, opB_content, registro, offset;
-    while(pos_act < mv.segment_descriptor_table[0].size) {
+    int index = mv.registers_table[4] >>16;
+    unsigned int pos_act =  (mv.segment_descriptor_table[index].base);
+    char *auxstr;
+    while (mv.segment_descriptor_table[index].size != 0 && pos_act < mv.segment_descriptor_table[index].size){
+        int count = 0;
+        printf("\n[%04X] ", (unsigned int) pos_act);
+        while(mv.memory[pos_act] != '\0') {
+            if (count <= 6 && (auxstr[6] == '\0' || auxstr[6] == NULL))
+                printf("%02X ",(unsigned char) mv.memory[pos_act]);
+            else
+                if (count == 6)
+                    printf(" .. ");
+            auxstr[count] = mv.memory[pos_act];
+            pos_act++;
+            count++;
+        }
+        printf(" | \'");
+        for (int i = 0; i <= count; ++i) {
+            if (auxstr[i] >= 32 && auxstr[i] <= 126) {
+                printf("%c", auxstr[i]);
+            }
+            else
+                printf(".");
+        }
+        printf("\' ");
+        pos_act++;
+    }
+    index = mv.registers_table[0] >>16;
+    pos_act =  (mv.segment_descriptor_table[index].base);
+    while(mv.segment_descriptor_table[index].size != 0 && pos_act < mv.segment_descriptor_table[index].size) {
         /// [pos instruccion]  instrucciones en hexa | MNEM  OPA, OPB
         printf("\n[%04X] ",(unsigned int)   pos_act);
 

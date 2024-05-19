@@ -21,6 +21,6 @@ void set_op(int *op_content, char op_size, struct VM* mv);
 void carga_regs(char regs_tags[0x40][4]);
 void carga_nemonics(char nemonicos_tags[0x20][5]);
 void dissasembler_func(struct  VM mv);
+unsigned char setlabel(int content);
 void help_tables(struct VM mv);
-
 #endif //VIRTUAL_MACHINE_MAQUINA_VIRTUAL_H

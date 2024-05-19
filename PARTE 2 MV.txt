@@ -2,14 +2,13 @@
 -Definir 2 registros 6 SP y 7 BP            LISTO
 -Modificar tabla descriptora de segmento (es dinamica)      LISTO
 opcional: Asignarle posicion a constante Cs, ds, es... etc...
--Agregar directivas:
-	-Include, el codigo se inserta en el lugar de la directiva.
-	-Segmento, indica cantidad de cytes a reservar para cada uno, puede ser, data, extra, stack.
-	-Tamaño, cantidad de celdas de memoria a cada segmento, si no hay, se utiliza 1024. el tamanio debe estar entre 0 y 0xffff (en decimal: 0 y 65535).
--Agregar lectura de strings: se lee byte por byte y termina al encontrar el  byte 0x00;
+-Directivas:                     se encarga el traductor LISTO xd
+-Agregar lectura de strings: se lee byte por byte y termina al encontrar el  byte 0x00;                                                 LISTO
 -Agregar constantes, estas se encuentran en los rotulos. Pueden estar ubicadas en cualquier lugar del codigo. Hay 2 tipos:
-	-Constantes Inmediatas (EQU). (a fren se le ocurrio plantearlas en un vector)
-	-Constantes Strings, permite almacenar una cadena de caracteres en KS y el offset se almacena en el segmento.
+	-Constantes Inmediatas (EQU).                                                                                                       Listo
+	-Constantes Strings, permite almacenar una cadena de caracteres en KS y el offset se almacena en el segmento.                       LISTO
+
+
 -Agregar a SYS:
 	-3 almacena en un rango de celdas de memoria un string ingresado por teclado.                                   LISTO
 	-4 imprime por pantalla el rango de celdas que almacena un string. El cursor queda una linea por debajo.        LISTO
@@ -32,7 +31,22 @@ Entry point:
 	-.vmi Tiene que existir este o vmx                                                      LISTO
 	-m=M Indica el tamaño de la memoria principal, expresado en kib, si no esta es 16kib    LISTO, PREGUNTAR COSAS
 	--d Assembler pa.                                                                       LISTO, FALTA \\ Y CONSTS, PREGUNTAR
+
+
 PREGUNTAR:
 Si existe CS, en la TBS, va en la posicion 1 o 0, asumiendo que existe cs.
 En la parte de ASCII, cuando hacemos una lectura con el sys, los caracteres imprimibles son de ascii comun o ascii extendido?
+Breakpoint: Consultar si es case unsensitive
 
+Consulta tamaño de segmentos:
+Parrafo 1:
+Antes de comenzar la ejecución, la máquina virtual debe inicializar los registros CS, DS, ES, SS y KS con
+los punteros al comienzo de sus respectivos segmentos. Si alguno de los segmentos no existe (su tamaño
+es igual a cero), su respectivo registro deberá quedar cargado con un -1.
+Parrafo 2:
+No necesariamente deben estar definidos los tres segmentos y tampoco en el mismo orden, pero cada
+directiva puede estar solo una vez en el código. Si alguno de los segmentos no está definido, se utiliza el
+tamaño 1024 como valor por defecto. El tamaño del Code Segment y del Constants Segment no los define
+el programador directamente, sino que se calculan según el contenido del archivo.
+
+Functions.c linea 487 preguntar que pasa con el caso de constantes string.

@@ -7,8 +7,6 @@
 #include <windows.h>
 #endif
 
-int op_content_size(int content);
-
 void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB, int *error){
     switch (opA) {
         case 0b00: {
@@ -222,7 +220,7 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
             break;
         }
         case 3:{
-            int index = get_puntero(0x0D0000, *mv);          //obtiene la dirección de memoria del registro EDX (CREO)
+            int index = get_puntero(0x0D0000, *mv);          //obtiene la dirección de memoria del registro EDX
             int max_chars = mv->registers_table[0xC];       //obtiene la cantidad máxima de caracteres a leer desde CX
             char input;
             int count = 0;
@@ -234,7 +232,7 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
             break;
         }
         case 4:{
-            int index = get_puntero(0x0D0000, *mv);     //obtiene la dirección de memoria del registro EDX (CREO)
+            int index = get_puntero(0x0D0000, *mv);     //obtiene la dirección de memoria del registro EDX
             while (mv->memory[index] != '\0') {
                 printf("%c", mv->memory[index]);
                 index++;
@@ -252,7 +250,7 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
         }
         case 0x46:{     //BreakPoint
             if(filename_vmi) {            //si existe archivo vmi
-                modifica_vmi(mv, filename_vmi);//EN ESTA LINEA HAY QUE LLAMAR UNA FUNCION QUE ARME EL .VMI, FALTA HACER ESO
+                modifica_vmi(mv, filename_vmi);
                 char input = getchar();
                 switch (input) {
                     case 'g': { // continua la ejecución
@@ -483,8 +481,20 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error){
     unsigned int value = 0;
     int index = pointer & 0x0000FFFF; //OFFSET
     int index_sdt = (int)(pointer & 0xFFFF0000)>>16;
-    if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= (mv.segment_descriptor_table[index_sdt].size - 4))){
-        value = (mv).memory[index] << 24 | (mv).memory[index + 1] << 16 | (mv).memory[index + 2 ] << 8 |(mv).memory[index + 3] ;
+    if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= (mv.segment_descriptor_table[index_sdt].size - 4))) {
+        if (index_sdt == 4){
+            int  i = 0;
+            unsigned char *aux;
+            while (mv.memory[index] != '\0'){
+                aux[i] = mv.memory[index];
+                i++;
+                index++;
+            }
+            aux[i] = '\0';
+            format_get_memory(aux,&value);
+        }
+        else
+            value = (mv).memory[index] << 24 | (mv).memory[index + 1] << 16 | (mv).memory[index + 2 ] << 8 |(mv).memory[index + 3] ;
     }
     else{
         *error = 2;
@@ -493,6 +503,20 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error){
     return value;
 }
 
+void format_get_memory(unsigned char *str, unsigned int *value) {
+    char first_char = str[0];
+
+    if (first_char == '%') {
+        // Hexadecimal number
+        sscanf((char *)str, "%x", value);
+    } else if (first_char == '@') {
+        // Octal number
+        sscanf((char *)str, "%o", value);
+    } else {
+        // Decimal number
+        sscanf((char *)str, "%u", value);
+    }
+}
 
 
 unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  //obtiene el valor del operando
@@ -511,9 +535,10 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
             value = op_content;
             break;
         }
-        case 2: //caso registro
-            value = get_registro(op_content,mv);
+        case 2: { //caso registro
+            value = get_registro(op_content, mv);
             break;
+        }
     }
     return value;
 }
@@ -805,20 +830,20 @@ void modifica_vmi(struct VM* mv, char* filename_vmi){
     unsigned int size_memory;
     FILE *file_mv_vmi;
     file_mv_vmi = fopen(filename_vmi, "wb");
-    if (file_mv_vmi == NULL) {
+    if (file_mv_vmi == NULL)
         perror("Error al abrir el archivo .vmi \n");
-        return;
+    else {
+        fseek(file_mv_vmi, 5, SEEK_SET);    //ME MUEVO DESPUES DEL HEADER ASI PUEDO LEER LA MEMORIA
+        fread(&size_memory, sizeof(unsigned short int), 1, file_mv_vmi);
+        // REGISTROS
+        fwrite(mv->registers_table, sizeof(int), 16, file_mv_vmi);
+        // SDT
+        for (int i = 0; i < 8; ++i) {
+            fwrite(&(mv->segment_descriptor_table[i].base), sizeof(unsigned short int), 1, file_mv_vmi);
+            fwrite(&(mv->segment_descriptor_table[i].size), sizeof(unsigned short int), 1, file_mv_vmi);
+        }
+        // MEMORIA
+        fwrite(mv->memory, sizeof(char), size_memory, file_mv_vmi);
     }
-    fseek(file_mv_vmi, 5, SEEK_SET);    //ME MUEVO DESPUES DEL HEADER ASI PUEDO LEER LA MEMORIA
-    fread(&size_memory, sizeof(unsigned short int), 1, file_mv_vmi);
-    // REGISTROS
-    fwrite(mv->registers_table, sizeof(int), 16, file_mv_vmi);
-    // SDT
-    for (int i = 0; i < 8; ++i) {
-        fwrite(&(mv->segment_descriptor_table[i].base), sizeof(int), 1, file_mv_vmi);
-        fwrite(&(mv->segment_descriptor_table[i].size), sizeof(int), 1, file_mv_vmi);
-    }
-    // MEMORIA
-    fwrite(mv->memory, sizeof(char), size_memory, file_mv_vmi);
     fclose(file_mv_vmi);
 }

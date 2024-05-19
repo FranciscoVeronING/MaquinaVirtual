@@ -479,22 +479,18 @@ void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes
 unsigned int get_memoria(int pointer, struct VM mv, int *error){
     ///hay 2 opciones, si es memoria directa, o si es la memoria de un registro
     unsigned int value = 0;
-    int index = pointer & 0x0000FFFF; //OFFSET
     int index_sdt = (int)(pointer & 0xFFFF0000)>>16;
+    int index = mv.segment_descriptor_table[index_sdt].base +( pointer & 0x0000FFFF); //OFFSET
+
+    printf("pointer %X\n", pointer);
+    printf("index %X\n", index);
+    printf("index_sdt %X\n", index_sdt);
+    printf("mv.segment_descriptor_table[index_sdt].base %X\n", mv.segment_descriptor_table[index_sdt].base);
+    printf("(mv.segment_descriptor_table[index_sdt].size - 4) %X\n", (mv.segment_descriptor_table[index_sdt].size - 4));
+
     if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= (mv.segment_descriptor_table[index_sdt].size - 4))) {
-        if (index_sdt == 4){
-            int  i = 0;
-            unsigned char *aux;
-            while (mv.memory[index] != '\0'){
-                aux[i] = mv.memory[index];
-                i++;
-                index++;
-            }
-            aux[i] = '\0';
-            format_get_memory(aux,&value);
-        }
-        else
-            value = (mv).memory[index] << 24 | (mv).memory[index + 1] << 16 | (mv).memory[index + 2 ] << 8 |(mv).memory[index + 3] ;
+
+        value = (mv).memory[index] << 24 | (mv).memory[index + 1] << 16 | (mv).memory[index + 2 ] << 8 |(mv).memory[index + 3] ;
     }
     else{
         *error = 2;

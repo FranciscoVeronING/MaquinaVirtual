@@ -426,7 +426,7 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
     if(mv->registers_table[6] < mv->segment_descriptor_table[3].base + 4 || mv->registers_table[7] == mv->registers_table[6] )///los indices son dinamicos, hay que cambiarlo
         *error = 6; // Stack Underflow
     // extrae 4 bytes desde el tope de la pila
-    int value = get_memoria(mv->registers_table[6], *mv, error);
+    int value = get_memoria(mv->registers_table[6], *mv, error, 0);
         value = value & 0xFFFF; // se truncan los bytes más significativos (ponele)
     set_value(value, opA, opA_content, mv, error);
     // aumenta el valor del SP en 4
@@ -446,7 +446,7 @@ void RET(struct VM *mv, int *error){
     POP(mv, (int)ip_content, ip,error);
 }
 
-int get_puntero(int op_content,struct VM mv){
+int get_puntero(int op_content, struct VM mv){
     int pointer;
     char index = op_content >> 16;
     int aux = mv.registers_table[index] >> 16;
@@ -454,7 +454,10 @@ int get_puntero(int op_content,struct VM mv){
    if(index == 1 || aux == 1)
        pointer += mv.segment_descriptor_table[aux].base;
    pointer += (op_content & 0x0000FFFF) ;
-    //printf(" \n %X este es pointer\n", pointer);
+    printf(" \n %X este es pointer\n", pointer);
+    printf(" \n %X este es mv.registers_table[index]\n", mv.registers_table[index]);
+    printf(" \n %X este es INDEX PA : \n", index);
+    printf(" \n %X este es OPCONTENT PA : \n", op_content);
 
     return pointer;
 }
@@ -476,7 +479,7 @@ void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes
         *error = 2;
 }
 
-unsigned int get_memoria(int pointer, struct VM mv, int *error){
+unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
     ///hay 2 opciones, si es memoria directa, o si es la memoria de un registro
     unsigned int value = 0;
     int index_sdt = (int)(pointer & 0xFFFF0000)>>16;
@@ -489,13 +492,25 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error){
     printf("(mv.segment_descriptor_table[index_sdt].size - 4) %X\n", (mv.segment_descriptor_table[index_sdt].size - 4));
 
     if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= (mv.segment_descriptor_table[index_sdt].size - 4))) {
-
-        value = (mv).memory[index] << 24 | (mv).memory[index + 1] << 16 | (mv).memory[index + 2 ] << 8 |(mv).memory[index + 3] ;
+        switch (type) {
+            case 3:{ ///byte
+                value = (mv).memory[index+3];
+                break;
+            }
+            case 2:{ ///word
+                value = (mv).memory[index + 2 ] << 8 | (mv).memory[index + 3];
+                break;
+            }
+            case 0:{
+                value = (mv).memory[index] << 24 | (mv).memory[index + 1] << 16 | (mv).memory[index + 2 ] << 8 | (mv).memory[index + 3] ;
+                break;
+            }
+        }
     }
     else{
         *error = 2;
     }
-   // printf("\n %x value este es el valor en getmemoria\n", value);
+    printf("\n %x value este es el valor en getmemoria\n", value);
     return value;
 }
 
@@ -520,9 +535,13 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
     switch(op_type){
         case 0: {   //caso de memoria
             /// 0000 xxxx 11111111 11111111
-            op_content = op_content_size(op_content);
+            printf("ESTE ES EL VALOR DE OP_CONTENT DE VALUE_OP %X\n", op_content);
+
+            int type = (op_content >> 22) & 0x00000003;
+            op_content = op_content & 0x0FFFFFFF;
+            printf("ESTE ES EL VALOR DE OP_CONTENT DE VALUE_OP %X\n", op_content);
             int pointer = get_puntero(op_content,mv);
-            value = get_memoria(pointer, mv, error);
+            value = get_memoria(pointer, mv, error, type);
             break;
         }
         case 1: { //caso inmediato
@@ -539,25 +558,6 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
     return value;
 }
 
-int op_content_size(int content) { //me indica cuantos byte debo extraer del contenido
-    char type = (char)((content >> 22) & 0b00000011);
-    switch (type) {
-        case 2:{
-            content = content & 0x0000ffff; // (short int) content;
-            break;
-        }
-        case 3:{
-            content = content & 0x000000ff; // (char) content;
-            break;
-        }
-        default:
-            content = content & 0x0000ffff;
-            if ((content & 0x8000) == 0x8000)
-                content =(int)(content | 0xffff0000);
-            break;
-    }
-    return content;
-}
 
 unsigned int get_registro(int op, struct VM mv) {
     int cod_reg, sec_reg, valor;
@@ -584,6 +584,7 @@ unsigned int get_registro(int op, struct VM mv) {
             break;
         }
     }
+    printf("ESTE ES DE GET REGISTRO PA: %X", valor);
     return valor;
 }
 
@@ -823,14 +824,19 @@ void change_cc(struct  VM* mv, int value_A){
 }
 
 void modifica_vmi(struct VM* mv, char* filename_vmi){
-    unsigned int size_memory;
     FILE *file_mv_vmi;
+    char header[8];
+    unsigned int auxSizeMemory = mv->size_memory/1024;
+    char char1 = (char)(auxSizeMemory & 0xFF);
+    char char2 = (char)((auxSizeMemory >> 8) & 0xFF);
     file_mv_vmi = fopen(filename_vmi, "wb");
     if (file_mv_vmi == NULL)
         perror("Error al abrir el archivo .vmi \n");
     else {
-        fseek(file_mv_vmi, 5, SEEK_SET);    //ME MUEVO DESPUES DEL HEADER ASI PUEDO LEER LA MEMORIA
-        fread(&size_memory, sizeof(unsigned short int), 1, file_mv_vmi);
+        strcpy(header, "VMX241");
+        strcat(header, &char1);
+        strcat(header, &char2);
+        fwrite(header, sizeof(int), 16, file_mv_vmi);
         // REGISTROS
         fwrite(mv->registers_table, sizeof(int), 16, file_mv_vmi);
         // SDT
@@ -839,7 +845,7 @@ void modifica_vmi(struct VM* mv, char* filename_vmi){
             fwrite(&(mv->segment_descriptor_table[i].size), sizeof(unsigned short int), 1, file_mv_vmi);
         }
         // MEMORIA
-        fwrite(mv->memory, sizeof(char), size_memory, file_mv_vmi);
+        fwrite(mv->memory, sizeof(char), mv->size_memory, file_mv_vmi);
     }
     fclose(file_mv_vmi);
 }

@@ -88,14 +88,16 @@ int main(int argc, char *argv[]) {
 
             mv.memory = (unsigned char *) malloc(size_memory_p * sizeof(unsigned char));
             if(mv.memory == NULL)
-                    printf("error al crear malloc");
+                printf("Error al crear malloc");
             int j= 0;
+            printf("%d", size_cs);
+           // size_cs-=1;
+            fread(&filename_vmx_content, sizeof(unsigned char), 1, file_mv_vmx);
             while (!feof(file_mv_vmx)) {
-                fread(&filename_vmx_content, sizeof(unsigned char), 1, file_mv_vmx);
-                mv.memory[j]  = filename_vmx_content;
+                mv.memory[j] = filename_vmx_content;
                 j++;
+                fread(&filename_vmx_content, sizeof(unsigned char), 1, file_mv_vmx);
             }
-
             fclose(file_mv_vmx);
 
             set_SDT(&mv, size_cs, size_ds, size_es, size_ss, size_ks, size_memory_p, &error);
@@ -158,6 +160,7 @@ int main(int argc, char *argv[]) {
             fclose(file_mv_vmi);
         }
     }
+         mv.size_memory = size_memory_p;
         ///EJECUCION
         int j, opB_content, opA_content;
         char pos_act;

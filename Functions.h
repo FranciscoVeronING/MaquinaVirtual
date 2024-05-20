@@ -32,7 +32,7 @@ void POP(struct VM* mv, int opA_content, char opA, int *error);
 void RET(struct VM *mv, int *error);
 void CALL(struct VM* mv, int opB_content, char opB, int *error);
 void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes, int *error);
-unsigned int get_memoria(int pointer, struct VM mv, int *error);
+unsigned int get_memoria(int pointer, struct VM mv, int *error, int type);
 void set_registro(int op,unsigned int valor, struct VM* mv);
 unsigned int get_registro(int pointer, struct VM mv);
 unsigned int value_op(int op_content, char op_type, struct VM mv, int *error);
@@ -43,6 +43,5 @@ void show_format_write( int acum, char format, int size_cells);
 void change_cc(struct  VM* mv, int value_A);
 void set_value(int value, char op, int op_content, struct VM *mv, int *error);
 void modifica_vmi(struct VM* mv, char* filename_vmi);
-int op_content_size(int content);
 void format_get_memory(unsigned char *str, unsigned int *value);
 #endif //VIRTUAL_MACHINE_FUNCTIONS_H

@@ -20,7 +20,6 @@ void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_
             (*mv).segment_descriptor_table[index].size = size_cs;
             base += size_cs;
             index++;
-
         }
         if(size_ds !=0){
             (*mv).segment_descriptor_table[index].base = base;
@@ -112,7 +111,7 @@ void dissasembler_func(struct  VM mv){
     char regs_tags[0x40][4];
     char nemonicos_tags[0X20][5];
     carga_regs(regs_tags);
-    carga_nemonics(nemonicos_tags);
+    carga_mnemonics(nemonicos_tags);
 
     char opA, opB, cod_op;
     int opA_size, opB_size, j, opA_content, opB_content, registro, offset;
@@ -292,7 +291,7 @@ void carga_regs(char regs_tags[0x40][4]){
     strcpy( regs_tags[0x3F], "FX");
 }
 
-void carga_nemonics(char nemonicos_tags[0x20][5]){
+void carga_mnemonics(char nemonicos_tags[0x20][5]){
     strcpy(nemonicos_tags[0x00],"MOV");
     strcpy(nemonicos_tags[0x01],"ADD");
     strcpy(nemonicos_tags[0x02],"SUB");

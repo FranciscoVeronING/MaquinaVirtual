@@ -90,8 +90,6 @@ int main(int argc, char *argv[]) {
             if(mv.memory == NULL)
                 printf("Error al crear malloc");
             int j= 0;
-            printf("%d", size_cs);
-           // size_cs-=1;
             fread(&filename_vmx_content, sizeof(unsigned char), 1, file_mv_vmx);
             while (!feof(file_mv_vmx)) {
                 mv.memory[j] = filename_vmx_content;
@@ -162,7 +160,7 @@ int main(int argc, char *argv[]) {
     }
          mv.size_memory = size_memory_p;
         ///EJECUCION
-        int j, opB_content, opA_content;
+        int  opB_content, opA_content;
         char pos_act;
         char opA, opB, cod_op;
         char opA_size, opB_size;
@@ -196,7 +194,7 @@ int main(int argc, char *argv[]) {
             else {
                 llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error, &flag_break_point,filename_vmi);
             }
-            help_tables(mv); //para ver lamemoria y las tablas, debug caserito
+           // help_tables(mv); //para ver lamemoria y las tablas, debug caserito
             //printf("error = %d", error);
         }
 

@@ -42,56 +42,39 @@ void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_
 
 void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks, unsigned short int offset_entry_point) {
     int index = 0;
-    if(size_cs == 0) {
+    if (size_cs == 0) {
         (*mv).registers_table[index] = -1;
-    }
-    else {
+    } else {
         (*mv).registers_table[index] = index << 16;
         (*mv).registers_table[5] = (index << 16) | offset_entry_point; //El registro IP apunta a CS
     }
     index++;
-    if(size_ds == 0)
+    if (size_ds == 0)
         (*mv).registers_table[index] = -1;
     else
-        (*mv).registers_table[index] = index<<16;
+        (*mv).registers_table[index] = index << 16;
     index++;
-    if(size_es == 0)
+    if (size_es == 0)
         (*mv).registers_table[index] = -1;
     else
-        (*mv).registers_table[index] = index<<16;
+        (*mv).registers_table[index] = index << 16;
     index++;
-    if(size_ss == 0) {
+    if (size_ss == 0) {
         (*mv).registers_table[index] = -1;
         (*mv).registers_table[6] = -1;
-    }
-    else {
+    } else {
         (*mv).registers_table[index] = index << 16;
-        (*mv).registers_table[6] =  (index << 16) + (*mv).segment_descriptor_table[index].size; //el registro Sp apunta altope de la pila
+        (*mv).registers_table[6] =
+                (index << 16) + (*mv).segment_descriptor_table[index].size; //el registro Sp apunta altope de la pila
     }
     index++;
-    if(size_ks == 0)
+    if (size_ks == 0)
         (*mv).registers_table[index] = -1;
     else
-        (*mv).registers_table[index] = index<<16;
-    for (index = 7 ; index < 16; ++index) {
-            (*mv).registers_table[index] = 0;
+        (*mv).registers_table[index] = index << 16;
+    for (index = 7; index < 16; ++index) {
+        (*mv).registers_table[index] = 0;
     }
-  /*  (*mv).registers_table[0] = (*mv).segment_descriptor_table[0].base << 16; //corresponde a CS
-    (*mv).registers_table[1] = 0x00010000 ; //corresponde a DS
-    (*mv).registers_table[2] = 0;
-    (*mv).registers_table[3] = 0;
-    (*mv).registers_table[4] = 0;
-    (*mv).registers_table[5] = (*mv).segment_descriptor_table[0].base << 16; //corresponde a IP
-    (*mv).registers_table[6] = 0;
-    (*mv).registers_table[7] = 0;
-    (*mv).registers_table[8] = 0;
-    (*mv).registers_table[9] = 0;
-    (*mv).registers_table[10] = 0;
-    (*mv).registers_table[11] = 0;
-    (*mv).registers_table[12] = 0;
-    (*mv).registers_table[13] = 0;
-    (*mv).registers_table[14] = 0;
-    (*mv).registers_table[15] = 0;*/
 }
 
 void set_op(int *op_content, char op_size, struct VM* mv) {

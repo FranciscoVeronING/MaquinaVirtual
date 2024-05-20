@@ -454,11 +454,6 @@ int get_puntero(int op_content, struct VM mv){
    if(index == 1 || aux == 1)
        pointer += mv.segment_descriptor_table[aux].base;
    pointer += (op_content & 0x0000FFFF) ;
-    printf(" \n %X este es pointer\n", pointer);
-    printf(" \n %X este es mv.registers_table[index]\n", mv.registers_table[index]);
-    printf(" \n %X este es INDEX PA : \n", index);
-    printf(" \n %X este es OPCONTENT PA : \n", op_content);
-
     return pointer;
 }
 
@@ -482,14 +477,8 @@ void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes
 unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
     ///hay 2 opciones, si es memoria directa, o si es la memoria de un registro
     unsigned int value = 0;
-    int index_sdt = (int)(pointer & 0xFFFF0000)>>16;
-    int index = mv.segment_descriptor_table[index_sdt].base +( pointer & 0x0000FFFF); //OFFSET
-
-    printf("pointer %X\n", pointer);
-    printf("index %X\n", index);
-    printf("index_sdt %X\n", index_sdt);
-    printf("mv.segment_descriptor_table[index_sdt].base %X\n", mv.segment_descriptor_table[index_sdt].base);
-    printf("(mv.segment_descriptor_table[index_sdt].size - 4) %X\n", (mv.segment_descriptor_table[index_sdt].size - 4));
+    int index = pointer & 0x0000FFFF; //OFFSET
+    int index_sdt = (int)(pointer & 0xFFFF0000)>>16; //OFFSET
 
     if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= (mv.segment_descriptor_table[index_sdt].size - 4))) {
         switch (type) {
@@ -510,36 +499,17 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
     else{
         *error = 2;
     }
-    printf("\n %x value este es el valor en getmemoria\n", value);
+    //printf("\n %x value este es el valor en getmemoria\n", value);
     return value;
 }
-
-void format_get_memory(unsigned char *str, unsigned int *value) {
-    char first_char = str[0];
-
-    if (first_char == '%') {
-        // Hexadecimal number
-        sscanf((char *)str, "%x", value);
-    } else if (first_char == '@') {
-        // Octal number
-        sscanf((char *)str, "%o", value);
-    } else {
-        // Decimal number
-        sscanf((char *)str, "%u", value);
-    }
-}
-
 
 unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  //obtiene el valor del operando
     unsigned int value;
     switch(op_type){
         case 0: {   //caso de memoria
             /// 0000 xxxx 11111111 11111111
-            printf("ESTE ES EL VALOR DE OP_CONTENT DE VALUE_OP %X\n", op_content);
-
             int type = (op_content >> 22) & 0x00000003;
             op_content = op_content & 0x0FFFFFFF;
-            printf("ESTE ES EL VALOR DE OP_CONTENT DE VALUE_OP %X\n", op_content);
             int pointer = get_puntero(op_content,mv);
             value = get_memoria(pointer, mv, error, type);
             break;
@@ -584,7 +554,6 @@ unsigned int get_registro(int op, struct VM mv) {
             break;
         }
     }
-    printf("ESTE ES DE GET REGISTRO PA: %X", valor);
     return valor;
 }
 

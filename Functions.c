@@ -248,7 +248,7 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
             #endif
             break;
         }
-        case 0x46:{     //BreakPoint
+        case 0xf:{     //BreakPoint
             if(filename_vmi) {            //si existe archivo vmi
                 modifica_vmi(mv, filename_vmi);
                 char input = getchar();
@@ -412,21 +412,21 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error){
     // decrementa el valor del registro SP en 4
     mv->registers_table[6] -= 4;
     // verifica si el SP está dentro de los límites de la pila
-    if(mv->registers_table[6] < mv->segment_descriptor_table[3].base)///los indices son dinamicos, hay que cambiarlo
+    if(mv->registers_table[6] < mv->segment_descriptor_table[(*mv).registers_table[3]>>16].base)
         *error = 5; // stack Overflow
     // saca el valor del operando
     int value = (int)value_op(opA_content, opA, *mv, error);
         value = (value & 0xFFFF) | ((value & 0x8000) ? 0xFFFF0000 : 0); //value & 0xFFFF toma los bytes menos significativos, value & 0x8000 verifica si es negativo o positivo
     // guarda el valor del operando en la posicion de memoria apuntada por SP
-    set_memoria(mv->registers_table[6], value, mv, 4, error);
+    set_memoria(get_puntero(mv->registers_table[6], (*mv)), value, mv, 4, error);
 }
 
 void POP(struct VM* mv, int opA_content, char opA, int *error){
     // veficia si hay suficientes bytes en la pila || si esta vacia
-    if(mv->registers_table[6] < mv->segment_descriptor_table[3].base + 4 || mv->registers_table[7] == mv->registers_table[6] )///los indices son dinamicos, hay que cambiarlo
+    if(mv->registers_table[6] < mv->segment_descriptor_table[(*mv).registers_table[3]>>16].base + 4 || mv->registers_table[7] == mv->registers_table[6] )///los indices son dinamicos, hay que cambiarlo
         *error = 6; // Stack Underflow
     // extrae 4 bytes desde el tope de la pila
-    int value = get_memoria(mv->registers_table[6], *mv, error, 0);
+    int value = get_memoria(get_puntero(mv->registers_table[6], (*mv)), *mv, error, 0);
         value = value & 0xFFFF; // se truncan los bytes más significativos (ponele)
     set_value(value, opA, opA_content, mv, error);
     // aumenta el valor del SP en 4
@@ -447,7 +447,7 @@ void RET(struct VM *mv, int *error){
 }
 
 int get_puntero(int op_content, struct VM mv){
-    int pointer;
+  /*  int pointer;
     char index = op_content >> 16;
     int aux = mv.registers_table[index] >> 16;
     pointer = 0x00010000 | mv.registers_table[index]; //se asigna el contenido que haya en el puntero, si es DS -> 0x00010000
@@ -455,6 +455,14 @@ int get_puntero(int op_content, struct VM mv){
        pointer += mv.segment_descriptor_table[aux].base;
    pointer += (op_content & 0x0000FFFF) ;
     return pointer;
+*/
+  int pointer;
+  char index_register = op_content >> 16;
+  int index = mv.registers_table[index_register] >> 16;
+  int content = mv.segment_descriptor_table[index].base;
+  pointer = (index << 16) + content + (op_content & 0x0000FFFF);
+
+  return pointer;
 }
 
 void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes, int * error){
@@ -462,7 +470,7 @@ void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes
     int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
     int aux = cant_bytes - 1;
     int index_sdt = (int)(pointer  >> 16);
-    if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= ((*mv).segment_descriptor_table[index_sdt].size - 4))) {
+    if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
         for (int i = 0; i < cant_bytes; ++i) {
             (*mv).memory[index] = (char) (value >> (8 * aux));
             aux--;

@@ -5,9 +5,15 @@
 void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks,unsigned int size_mp, int *error){
     unsigned int aux = size_ks+size_cs+size_es+size_ds+size_ss;
     if( aux > size_mp){
+       // printf("memo %d", size_mp);
         *error = 4;
     }
     else{
+        printf("CS %d ", size_cs);
+        printf("DS %d ", size_ds);
+        printf("KS %d ", size_ks);
+        printf("ES %d ", size_es);
+        printf("SS %d ", size_ss);
         int index = 0, base = 0;
         if(size_ks !=0){
             (*mv).segment_descriptor_table[index].base = base;
@@ -64,8 +70,7 @@ void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned sho
         (*mv).registers_table[6] = -1;
     } else {
         (*mv).registers_table[index] = index << 16;
-        (*mv).registers_table[6] =
-                (index << 16) + (*mv).segment_descriptor_table[index].size; //el registro Sp apunta altope de la pila
+        (*mv).registers_table[6] = (index << 16) + (*mv).segment_descriptor_table[index].size; //el registro Sp apunta altope de la pila
     }
     index++;
     if (size_ks == 0)

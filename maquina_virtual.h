@@ -1,7 +1,7 @@
 #ifndef VIRTUAL_MACHINE_MAQUINA_VIRTUAL_H
 #define VIRTUAL_MACHINE_MAQUINA_VIRTUAL_H
 
-#define CANT_SDT 2       //Cantidad de celdas de la tabla de descriptores de segmento
+#define CANT_SDT  8        //Cantidad de celdas de la tabla de descriptores de segmento
 
 
 

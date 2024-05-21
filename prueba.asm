@@ -10,6 +10,8 @@
             mov     bp, sp
             push    ebx
             push    edx
+            mov     eax,1
+            mov     edx,0
     sigue:  cmp     edx,[bp+8]
             jz      fin
             mul     eax,[bp+12]

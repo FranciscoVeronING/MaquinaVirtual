@@ -423,7 +423,7 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error){
 
 void POP(struct VM* mv, int opA_content, char opA, int *error){
     // veficia si hay suficientes bytes en la pila || si esta vacia
-    if(mv->registers_table[6] < mv->segment_descriptor_table[(*mv).registers_table[3]>>16].base + 4 || mv->registers_table[7] == mv->registers_table[6] )///los indices son dinamicos, hay que cambiarlo
+    if(mv->registers_table[6] < (mv->segment_descriptor_table[(*mv).registers_table[3]>>16].base + 4))// || mv->registers_table[7] == mv->registers_table[6]
         *error = 6; // Stack Underflow
     // extrae 4 bytes desde el tope de la pila
     int value = get_memoria(get_puntero(mv->registers_table[6], (*mv)), *mv, error, 0);

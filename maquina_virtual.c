@@ -70,7 +70,7 @@ void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned sho
         (*mv).registers_table[6] = -1;
     } else {
         (*mv).registers_table[index] = index << 16;
-        (*mv).registers_table[6] = (index << 16) + (*mv).segment_descriptor_table[index].size; //el registro Sp apunta altope de la pila
+        (*mv).registers_table[6] = (index << 16) + mv->segment_descriptor_table[index].size; //el registro Sp apunta altope de la pila
     }
     index++;
     if (size_ks == 0)

@@ -166,11 +166,12 @@ int main(int argc, char *argv[]) {
     char opA, opB, cod_op;
     char opA_size, opB_size;
 
-    int indexCS = mv.registers_table[0] >> 16 ;
-    int index =mv.segment_descriptor_table[indexCS].base;
-    while (error == 0 && (mv.registers_table[5] &  0x0000FFFF)< mv.segment_descriptor_table[indexCS].size) {
+   int indexIP = mv.registers_table[5]>>16;
+   int index;
+    while (error == 0 && (mv.registers_table[5] &  0x0000FFFF)< mv.segment_descriptor_table[indexIP].size) {
             //carga de operandos
-         pos_act = (char) mv.memory[index];
+         index =  mv.registers_table[5] & 0x0000ffff;
+         pos_act = (char) mv.memory[index];//este ta bom, creo que el problema es que index no lo actualizamos, y siempre va a ser este
          opB = (char) (((pos_act & 0b11000000) >> 6) & 0b00000011);
          opA = (char) ((pos_act & 0b00110000) >> 4);
          cod_op = (char) (pos_act & 0b00011111);
@@ -186,7 +187,7 @@ int main(int argc, char *argv[]) {
          set_op(&opB_content, opB_size, &mv);
          set_op(&opA_content, opA_size, &mv);
             //Se actualiza IP
-         mv.registers_table[index] += 1; //SE SACA IP Y LA DE ARRIBA
+         mv.registers_table[5] += 1; //SE SACA IP Y LA DE ARRIBA, si es 5, actualiza ip de una
          if (flag_break_point){
              llamado_funcion( &mv, opA, opA_content, opB, opB_content, cod_op, &error, &flag_break_point, filename_vmi);
              SYS(&mv, 0xf, &error, &flag_break_point, filename_vmi);

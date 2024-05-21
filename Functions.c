@@ -460,8 +460,7 @@ int get_puntero(int op_content, struct VM mv){
   char index_register = op_content >> 16;
   int index = mv.registers_table[index_register] >> 16;
   int content = mv.segment_descriptor_table[index].base;
-  pointer = (index << 16) + content + (op_content & 0x0000FFFF);
-
+  pointer = (index << 16) + content + (op_content & 0x0000FFFF) + (mv.registers_table[index_register] & 0x0000ffff);
   return pointer;
 }
 
@@ -488,7 +487,7 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
     int index = pointer & 0x0000FFFF; //OFFSET
     int index_sdt = (int)(pointer & 0xFFFF0000)>>16; //OFFSET
 
-    if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= (mv.segment_descriptor_table[index_sdt].size - 4))) {
+    if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= ((mv.segment_descriptor_table[index_sdt].base + mv.segment_descriptor_table[index_sdt].size) - 4))) {
         switch (type) {
             case 3:{ ///byte
                 value = (mv).memory[index+3];

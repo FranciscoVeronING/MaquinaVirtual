@@ -8,6 +8,8 @@
             add     sp,8
     func:   push    bp
             mov     bp, sp
+            push    ebx
+            push    edx
     sigue:  cmp     edx,[bp+8]
             jz      fin
             mul     eax,[bp+12]

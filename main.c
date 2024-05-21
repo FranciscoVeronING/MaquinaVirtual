@@ -31,21 +31,21 @@ int main(int argc, char *argv[]) {
     unsigned char memory_vmi;
     unsigned short int size_memory_vmi;
     int aux;
-    for (int i = 1; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
         if (strstr(argv[i], ".vmx") != NULL) {
             aux = strlen(argv[i]);
             filename_vmx = (char *) malloc((aux+1)*sizeof (char));
             strcpy(filename_vmx,argv[i]);
-        }
+        }else
         if (strstr(argv[i], ".vmi") != NULL) {
             aux = strlen(argv[i]);
             filename_vmi = (char *) malloc((aux+1)*sizeof (char));
             strcpy(filename_vmi,argv[i]);
-        }
+        }else
         if (strstr(argv[i], "m=") != NULL) {
             option_m = atoi(argv[i]+2);
-        }
-        if (strcmp(argv[i], "-d") == 0) {
+        }else
+        if (strstr(argv[i], "-d") != NULL) {
             dissassembler_flag = 1;
         }
     }

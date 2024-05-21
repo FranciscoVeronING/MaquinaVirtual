@@ -425,12 +425,13 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
     // veficia si hay suficientes bytes en la pila || si esta vacia
     if(mv->registers_table[6] < (mv->segment_descriptor_table[(*mv).registers_table[3]>>16].base + 4))// || mv->registers_table[7] == mv->registers_table[6]
         *error = 6; // Stack Underflow
-    // extrae 4 bytes desde el tope de la pila
-    int value = get_memoria(get_puntero(mv->registers_table[6], (*mv)), *mv, error, 0);
-        value = value & 0xFFFF; // se truncan los bytes más significativos (ponele)
-    set_value(value, opA, opA_content, mv, error);
-    // aumenta el valor del SP en 4
-    mv->registers_table[6] += 4;
+    else {
+        // extrae 4 bytes desde el tope de la pila
+         int value =  get_memoria(get_puntero(0x60000,*mv),*mv,error,0);
+        set_value(value, opA, opA_content, mv, error);
+        // aumenta el valor del SP en 4
+        mv->registers_table[6] += 4;
+    }
 }
 
 void CALL(struct VM* mv, int opB_content, char opB, int *error){
@@ -441,9 +442,7 @@ void CALL(struct VM* mv, int opB_content, char opB, int *error){
 }
 
 void RET(struct VM *mv, int *error){
-    char ip = 0b00000101;
-    unsigned int ip_content = value_op((*mv).registers_table[5],ip,(*mv),error);
-    POP(mv, (int)ip_content, ip,error);
+    POP(mv, 0x5, 2,error);
 }
 
 int get_puntero(int op_content, struct VM mv){

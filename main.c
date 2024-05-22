@@ -121,26 +121,29 @@ int main(int argc, char *argv[]) {
             fclose(file_mv_vmi);
             return 1;
         } else {
+            registers = (char *) malloc(64*sizeof (char));
+            segments_descriptors = (char *) malloc(32*sizeof (char));
             fread(&size_memory_vmi, sizeof(unsigned short int), 1, file_mv_vmi); ///preguntar para que corno se usa
             fread(registers, sizeof(char), 64, file_mv_vmi);
             fread(segments_descriptors, sizeof(char), 32, file_mv_vmi);
             if (filename_vmx == NULL) {
                 char *aux;
                 int count = 0;
+                aux = (char*) malloc(4*sizeof (char));
                 for (int i = 0; i < 16; ++i) {
-                    aux = NULL;
+                    //aux = NULL;
                     strncpy(aux, (registers + (4 * count)), 4);
                     mv.registers_table[i] = atoi(aux);
                     count++;
                 }
                 ///copia de Segments_Descriptor_Table
-                aux = NULL;
+              //  aux = NULL;
                 count = 0;
                 for (int i = 0; i < 8; ++i) {
-                    aux = NULL;
+                  //  aux = NULL;
                     strncpy(aux, (segments_descriptors + (2 * count)), 2);
                     mv.segment_descriptor_table[i].base = (unsigned short int) atoi(aux);
-                    aux = NULL;
+                   // aux = NULL;
                     count++;
                     strncpy(aux, (segments_descriptors + (2 * count)), 2);
                     mv.segment_descriptor_table[i].size = (unsigned short int) atoi(aux);
@@ -151,7 +154,7 @@ int main(int argc, char *argv[]) {
 
                 mv.memory = (unsigned char *) malloc(size_memory_vmi * sizeof(unsigned char));
                 int j = 0;
-                while (!feof(file_mv_vmi)) {
+                while (j<size_memory_vmi){
                     fread(&memory_vmi, sizeof(unsigned char), 1, file_mv_vmi);
                     mv.memory[j] = memory_vmi;
                     j++;

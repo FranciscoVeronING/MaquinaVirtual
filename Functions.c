@@ -409,28 +409,27 @@ void STOP(int *error){
 }
 
 void PUSH(struct VM* mv, int opA_content, char opA, int *error){
-    // decrementa el valor del registro SP en 4
-    mv->registers_table[6] -= 4;
-    // verifica si el SP está dentro de los límites de la pila
-    if(mv->registers_table[6] < mv->segment_descriptor_table[(*mv).registers_table[3]>>16].base)
-        *error = 5; // stack Overflow
-    // saca el valor del operando
-    int value = (int)value_op(opA_content, opA, *mv, error);
-        value = (value & 0xFFFF) | ((value & 0x8000) ? 0xFFFF0000 : 0); //value & 0xFFFF toma los bytes menos significativos, value & 0x8000 verifica si es negativo o positivo
-    // guarda el valor del operando en la posicion de memoria apuntada por SP
-    set_memoria(get_puntero(mv->registers_table[6], (*mv)), value, mv, 4, error);
+    int sp_reg = get_registro(get_puntero(0x6,*mv),*mv);
+    int ss_reg = get_registro(get_puntero(((*mv).registers_table[6]>>16),*mv),*mv);
+    sp_reg -= 4;
+    set_registro(((*mv).registers_table[6]>>16), sp_reg, mv);
+    if(sp_reg < ss_reg)
+        *error = 5;
+
+    int value = value_op(opA_content, opA, *mv, error);
+    set_memoria(get_puntero(ss_reg,*mv), value, mv, 4, error);
 }
 
 void POP(struct VM* mv, int opA_content, char opA, int *error){
-    // veficia si hay suficientes bytes en la pila || si esta vacia
-    if(mv->registers_table[6] < (mv->segment_descriptor_table[(*mv).registers_table[3]>>16].base + 4))// || mv->registers_table[7] == mv->registers_table[6]
-        *error = 6; // Stack Underflow
-    else {
-        // extrae 4 bytes desde el tope de la pila
-         int value =  get_memoria(get_puntero(0x60000,*mv),*mv,error,0);
-        set_value(value, opA, opA_content, mv, error);
-        // aumenta el valor del SP en 4
-        mv->registers_table[6] += 4;
+    int sp_reg = get_registro(get_puntero(0x6,*mv),*mv);
+    int ss_reg = get_registro(get_puntero(((*mv).registers_table[6]>>16),*mv),*mv);
+    int value = get_memoria(get_puntero(sp_reg,*mv),*mv,error, 2);
+    if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size + 4)
+        *error = 6;
+    else{
+        MOV(mv,opA_content,value,opA,0x0,error);
+        sp_reg += 4;
+        set_registro(0x6,sp_reg,mv);
     }
 }
 

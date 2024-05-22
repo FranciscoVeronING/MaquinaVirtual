@@ -408,34 +408,35 @@ void STOP(int *error){
    *error =  -1;
 }
 
-void PUSH(struct VM* mv, int opA_content, char opA, int *error){
-    int sp_reg = get_registro(get_puntero(0x6,*mv),*mv);
-    int ss_reg = get_registro(get_puntero(((*mv).registers_table[6]>>16),*mv),*mv);
+void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
+    int sp_reg = get_registro(0x6, *mv);
+    int ss_reg = get_registro(0x3, *mv);
     sp_reg -= 4;
-    set_registro(((*mv).registers_table[6]>>16), sp_reg, mv);
-    if(sp_reg < ss_reg)
+    if (sp_reg < ss_reg)
         *error = 5;
-
-    int value = value_op(opA_content, opA, *mv, error);
-    set_memoria(get_puntero(ss_reg,*mv), value, mv, 4, error);
+    else {
+        set_registro(0x6, sp_reg, mv);
+        int value = value_op(opA_content, opA, *mv, error);
+        set_memoria(sp_reg, value, mv, 4, error);
+    }
 }
 
 void POP(struct VM* mv, int opA_content, char opA, int *error){
-    int sp_reg = get_registro(get_puntero(0x6,*mv),*mv);
-    int ss_reg = get_registro(get_puntero(((*mv).registers_table[6]>>16),*mv),*mv);
-    int value = get_memoria(get_puntero(sp_reg,*mv),*mv,error, 2);
+    int sp_reg = get_registro(0x6,*mv);
+    int ss_reg = get_registro(0x3,*mv);
+    int value = get_memoria(sp_reg,*mv,error, 2);
+    sp_reg += 4;
     if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size + 4)
         *error = 6;
     else{
         MOV(mv,opA_content,value,opA,0x0,error);
-        sp_reg += 4;
         set_registro(0x6,sp_reg,mv);
     }
 }
 
 void CALL(struct VM* mv, int opB_content, char opB, int *error){
     // pushea el valor actual de IP en la pila
-    PUSH(mv, (*mv).registers_table[5], opB, error);
+    PUSH(mv, 0x5, 2, error);
     // salta a la direccion dada por el operando
     JMP(mv, opB_content, opB, error);
 }
@@ -445,20 +446,11 @@ void RET(struct VM *mv, int *error){
 }
 
 int get_puntero(int op_content, struct VM mv){
-  /*  int pointer;
-    char index = op_content >> 16;
-    int aux = mv.registers_table[index] >> 16;
-    pointer = 0x00010000 | mv.registers_table[index]; //se asigna el contenido que haya en el puntero, si es DS -> 0x00010000
-   if(index == 1 || aux == 1)
-       pointer += mv.segment_descriptor_table[aux].base;
-   pointer += (op_content & 0x0000FFFF) ;
-    return pointer;
-*/
   int pointer;
-  char index_register = op_content >> 16;
-  int index = mv.registers_table[index_register] >> 16;
-  int content = mv.segment_descriptor_table[index].base;
-  pointer = (index << 16) + content + (op_content & 0x0000FFFF) + (mv.registers_table[index_register] & 0x0000ffff);
+  char index_register = (char)((op_content >> 16) & 0xf);
+  int index = (int)((mv.registers_table[index_register] >> 16)& 0xff);
+  int base = mv.segment_descriptor_table[index].base;
+  pointer = (index << 16) + base + (op_content & 0x0000FFFF) + (mv.registers_table[index_register] & 0x0000ffff);
   return pointer;
 }
 
@@ -473,7 +465,6 @@ void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes
             aux--;
             index++;
         }
-        index--;
     }
     else
         *error = 2;
@@ -492,7 +483,7 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
                 break;
             }
             case 2:{ ///word
-                value = (mv).memory[index + 2 ] << 8 | (mv).memory[index + 3];
+                value = (mv).memory[index] << 8 | (mv).memory[index + 1]; ///CARGAMOS LOS 2 BYTES MAS SIGNIFICATIVOS
                 break;
             }
             case 0:{
@@ -514,7 +505,7 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
         case 0: {   //caso de memoria
             /// 0000 xxxx 11111111 11111111
             int type = (op_content >> 22) & 0x00000003;
-            op_content = op_content & 0x0FFFFFFF;
+            op_content = op_content & 0x000FFFFF;
             int pointer = get_puntero(op_content,mv);
             value = get_memoria(pointer, mv, error, type);
             break;

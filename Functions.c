@@ -5,23 +5,21 @@
 
 #ifdef _WIN32
 #include <windows.h>
+
+
+
 #endif
 
 void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB, int *error){
-    switch (opA) {
-        case 0b00: {
-           // printf("entro a set memoria ");
-            int pointer =  get_puntero(opA_content, *mv);
-            set_memoria(pointer, value_op(opB_content, opB,*mv, error), mv, 4, error);       //memoria
-            break;
-        }
-        case 0b10: {
-            //printf("entro a set registro ");
-            set_registro(opA_content, value_op(opB_content, opB, *mv, error), mv);      //registro
-            break;
-        }
-    }
+    int value_A =(int) value_op(opA_content, opA, *mv, error);
+    int value_B =(int) value_op(opB_content, opB, *mv, error);
+    value_A = value_B;
+    // Guardamos el valor resultante de vuelta en el operando A
+    set_value(value_A, opA, opA_content, mv, error);
+
 }
+
+
 
 void ADD(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
     // Obtenemos el valor del operando A y B
@@ -220,7 +218,7 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
             break;
         }
         case 3:{
-            int index = get_puntero(0x0D0000, *mv);          //obtiene la dirección de memoria del registro EDX
+            //int index = get_puntero(0x0D0000, *mv);          //obtiene la dirección de memoria del registro EDX
             int max_chars = mv->registers_table[0xC];       //obtiene la cantidad máxima de caracteres a leer desde CX
             char input;
             int count = 0;
@@ -232,12 +230,12 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
             break;
         }
         case 4:{
-          //  int index = get_puntero(0x0D0000, *mv);//obtiene la dirección de memoria del registro EDX
+            int index = (get_puntero(0x0D0000, *mv) & 0x0000ffff);//obtiene la dirección de memoria del registro EDX
             while (mv->memory[index] != '\0') {
                 printf("%c", mv->memory[index]);
                 index++;
             }
-            printf("\n");
+            //printf("\n");
             break;
         }
         case 7:{       //Limpia la terminal
@@ -317,8 +315,10 @@ void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
 
 void JMP(struct VM* mv, int opA_content, char opA, int *error){
     int value_A =(int) value_op(opA_content, opA, *mv, error);
-    if(value_A < mv->segment_descriptor_table[0].size) {
-        mv->registers_table[5] = (int) (value_A & 0x0000FFFF);
+    int offset = (int)( 0x0000ffff & (value_A + (*mv).segment_descriptor_table[mv->registers_table[5]>>16].base));
+    int size_cs =(*mv).segment_descriptor_table[mv->registers_table[0]>>16].base + (*mv).segment_descriptor_table[mv->registers_table[0]>>16].size;
+    if((offset >= (*mv).segment_descriptor_table[mv->registers_table[0]>>16].base) && (offset < size_cs)) {
+        mv->registers_table[5] = (int)(((*mv).registers_table[5] & 0xffff0000)  + offset);
     }
     else
         *error = 2; //caida de segmento
@@ -327,8 +327,10 @@ void JMP(struct VM* mv, int opA_content, char opA, int *error){
 void JZ(struct VM* mv, int opB_content, char opB, int *error){
     if( mv->registers_table[8] == 0x40000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
-        if (value_B < mv->segment_descriptor_table[0].size){
-            (*mv).registers_table[5] = value_B;
+        int offset = (int)( 0x0000ffff & (value_B + (*mv).segment_descriptor_table[mv->registers_table[5]>>16].base));
+        int size_cs =(*mv).segment_descriptor_table[mv->registers_table[0]>>16].base + (*mv).segment_descriptor_table[mv->registers_table[0]>>16].size;
+        if((offset >= (*mv).segment_descriptor_table[mv->registers_table[0]>>16].base) && (offset < size_cs)) {
+            mv->registers_table[5] = (int)(((*mv).registers_table[5] & 0xffff0000) + offset);
         }
         else
             *error = 2; //caida de segmento
@@ -337,8 +339,10 @@ void JZ(struct VM* mv, int opB_content, char opB, int *error){
 void JP(struct VM* mv, int opB_content, char opB, int *error){
     if(mv->registers_table[8] != 0x40000000 && mv->registers_table[8] != 0x80000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
-        if (value_B < mv->segment_descriptor_table[0].size){
-            (*mv).registers_table[5] = value_B;
+        int offset = (int)( 0x0000ffff & (value_B + (*mv).segment_descriptor_table[mv->registers_table[5]>>16].base));
+        int size_cs =(*mv).segment_descriptor_table[mv->registers_table[0]>>16].base + (*mv).segment_descriptor_table[mv->registers_table[0]>>16].size;
+        if((offset >= (*mv).segment_descriptor_table[mv->registers_table[0]>>16].base) && (offset < size_cs)) {
+            mv->registers_table[5] = (int)(((*mv).registers_table[5] & 0xffff0000)  + offset);
         }
         else
             *error = 2; //caida de segmento
@@ -348,8 +352,10 @@ void JP(struct VM* mv, int opB_content, char opB, int *error){
 void JN(struct VM* mv, int opB_content, char opB, int *error){
     if(mv->registers_table[8] == 0x80000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
-        if (value_B < mv->segment_descriptor_table[0].size){
-            (*mv).registers_table[5] = value_B;
+        int offset = (int)( 0x0000ffff & (value_B + (*mv).segment_descriptor_table[mv->registers_table[5]>>16].base));
+        int size_cs =(*mv).segment_descriptor_table[mv->registers_table[0]>>16].base + (*mv).segment_descriptor_table[mv->registers_table[0]>>16].size;
+        if((offset >= (*mv).segment_descriptor_table[mv->registers_table[0]>>16].base) && (offset < size_cs)) {
+            mv->registers_table[5] = (int)(((*mv).registers_table[5] & 0xffff0000)  + offset);
         }
         else
             *error = 2; //caida de segmento
@@ -358,8 +364,10 @@ void JN(struct VM* mv, int opB_content, char opB, int *error){
 void JNZ(struct VM* mv, int opB_content, char opB, int *error){
     if(mv->registers_table[8] == 0x80000000 || mv->registers_table[8] == 0x00000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
-        if (value_B < mv->segment_descriptor_table[0].size){
-            (*mv).registers_table[5] = value_B;
+        int offset = (int)( 0x0000ffff & (value_B + (*mv).segment_descriptor_table[mv->registers_table[5]>>16].base));
+        int size_cs =(*mv).segment_descriptor_table[mv->registers_table[0]>>16].base + (*mv).segment_descriptor_table[mv->registers_table[0]>>16].size;
+        if((offset >= (*mv).segment_descriptor_table[mv->registers_table[0]>>16].base) && (offset < size_cs)) {
+            mv->registers_table[5] = (int)(((*mv).registers_table[5] & 0xffff0000)  + offset);
         }
         else
             *error = 2; //caida de segmento
@@ -369,8 +377,10 @@ void JNZ(struct VM* mv, int opB_content, char opB, int *error){
 void JNP(struct VM* mv, int opB_content, char opB, int *error){
     if( mv->registers_table[8] == 0x40000000 || mv->registers_table[8] == 0x80000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
-        if (value_B < mv->segment_descriptor_table[0].size){
-            (*mv).registers_table[5] = value_B;
+        int offset = (int)( 0x0000ffff & (value_B + (*mv).segment_descriptor_table[mv->registers_table[5]>>16].base));
+        int size_cs =(*mv).segment_descriptor_table[mv->registers_table[0]>>16].base + (*mv).segment_descriptor_table[mv->registers_table[0]>>16].size;
+        if((offset >= (*mv).segment_descriptor_table[mv->registers_table[0]>>16].base) && (offset < size_cs)) {
+            mv->registers_table[5] = (int)(((*mv).registers_table[5] & 0xffff0000)  + offset);
         }
         else
             *error = 2; //caida de segmento
@@ -380,8 +390,10 @@ void JNP(struct VM* mv, int opB_content, char opB, int *error){
 void JNN(struct VM* mv, int opB_content, char opB, int *error){
     if(mv->registers_table[8] == 0x40000000 || mv->registers_table[8] == 0x00000000) {
         int value_B =(int) value_op(opB_content, opB, *mv, error);
-        if (value_B < mv->segment_descriptor_table[0].size){
-            (*mv).registers_table[5] = value_B;
+        int offset = (int)( 0x0000ffff & (value_B + (*mv).segment_descriptor_table[mv->registers_table[5]>>16].base));
+        int size_cs =(*mv).segment_descriptor_table[mv->registers_table[0]>>16].base + (*mv).segment_descriptor_table[mv->registers_table[0]>>16].size;
+        if((offset >= (*mv).segment_descriptor_table[mv->registers_table[0]>>16].base) && (offset < size_cs)) {
+            mv->registers_table[5] = (int)(((*mv).registers_table[5] & 0xffff0000)  + offset);
         }
         else
             *error = 2; //caida de segmento
@@ -409,16 +421,16 @@ void STOP(int *error){
 }
 
 void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
-    int sp_reg = get_registro(0x6, *mv);
-    int ss_reg = get_registro(0x3, *mv);
+    unsigned int sp_reg = get_registro(0x6, *mv);
+    unsigned int ss_reg = get_registro(0x3, *mv);
     sp_reg -= 4;
     if (sp_reg < ss_reg)
         *error = 5;//stack Overflow
     else {
         set_registro(0x6, sp_reg, mv);
-        int value = value_op(opA_content, opA, *mv, error);
+        unsigned int value = value_op(opA_content, opA, *mv, error);
         //set_memoria(sp_reg, value, mv, 4, error);
-        int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
+        unsigned int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
         int aux = 3;
         int index_sdt = (int)(sp_reg  >> 16);
         index += (*mv).segment_descriptor_table[index_sdt].base;
@@ -435,8 +447,8 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
 }
 
 void POP(struct VM* mv, int opA_content, char opA, int *error){
-    int sp_reg = get_registro(0x6,*mv);
-    int ss_reg = get_registro(0x3,*mv);
+    unsigned int sp_reg = get_registro(0x6,*mv);
+    unsigned int ss_reg = get_registro(0x3,*mv);
     if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size )
         *error = 6; // Stack Underflow
     else{
@@ -444,8 +456,8 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
             case 0 :{
 
                 //set_memoria(get_puntero(opA_content,(*mv)), value_op(0x60000, 0,*mv, error), mv, 4, error);
-                int value = value_op(0x60000, 0,*mv, error);
-                int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
+                unsigned int value = value_op(0x60000, 0,*mv, error);
+                unsigned int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
                 int aux = 3;
                 int index_sdt = (int)(sp_reg  >> 16);
                 index += (*mv).segment_descriptor_table[index_sdt].base;
@@ -472,8 +484,8 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
 
 void CALL(struct VM* mv, int opB_content, char opB, int *error){
     // pushea el valor actual de IP en la pila
-    int sp_reg = get_registro(0x6, *mv);
-    int ss_reg = get_registro(0x3, *mv);
+    unsigned int sp_reg = get_registro(0x6, *mv);
+    unsigned int ss_reg = get_registro(0x3, *mv);
     sp_reg -= 4;
     if (sp_reg < ss_reg)
         *error = 5; //stack Overflow
@@ -481,7 +493,7 @@ void CALL(struct VM* mv, int opB_content, char opB, int *error){
         set_registro(0x6, sp_reg, mv);
         int value = (*mv).registers_table[5] & 0x0000ffff;
         //set_memoria(sp_reg, value, mv, 4, error);
-        int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
+        unsigned int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
         int aux = 3;
         int index_sdt = (int)(sp_reg  >> 16);
         index += (*mv).segment_descriptor_table[index_sdt].base;
@@ -500,13 +512,13 @@ void CALL(struct VM* mv, int opB_content, char opB, int *error){
 }
 
 void RET(struct VM *mv, int *error){
-    int sp_reg = get_registro(0x6,*mv);
-    int ss_reg = get_registro(0x3,*mv);
+    unsigned int sp_reg = get_registro(0x6,*mv);
+    unsigned int ss_reg = get_registro(0x3,*mv);
     if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size )
         *error = 6; // Stack Underflow
     else {
         // Realiza un salto a la dirección de memoria extraída
-        mv->registers_table[5] = get_memoria(get_puntero(0x60000,(*mv)),(*mv),error,0);
+        mv->registers_table[5] = (int)get_memoria(get_puntero(0x60000,(*mv)),(*mv),error,0);
         sp_reg += 4;
         set_registro(0x6, sp_reg, mv);
     }
@@ -548,7 +560,7 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
     if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= ((mv.segment_descriptor_table[index_sdt].base + mv.segment_descriptor_table[index_sdt].size) - 4))) {
          switch (type) {
             case 3:{ ///byte
-                value = (mv).memory[index+3];
+                value = (mv).memory[index];
                 break;
             }
             case 2:{ ///word
@@ -609,7 +621,7 @@ unsigned int get_registro(int op, struct VM mv) {
             break;
         }
         case 2:{
-            char temp = (mv.registers_table[cod_reg] & 0xFF00)>>8;
+            unsigned char temp = (unsigned char)((mv.registers_table[cod_reg] & 0xFF00)>>8);
             valor = (temp & 0x80) ? (int)(temp | 0xFFFFFF00) : (int)temp;
             break;
         }
@@ -633,15 +645,15 @@ void set_registro(int op,unsigned int valor, struct VM* mv){
             break;
         }
         case 1:{
-            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFFFF00) + (valor & 0x000000ff); //se quieren mantener los 24 bits y modificar los ultimos 8 (caso AL)
+            (*mv).registers_table[cod_reg] = (int)(((*mv).registers_table[cod_reg] & 0xFFFFFF00) + (valor & 0x000000ff)); //se quieren mantener los 24 bits y modificar los ultimos 8 (caso AL)
             break;
         }
         case 2:{
-            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFF00FF) | ((valor & 0x000000ff) << 8); // Caso modificar AH
+            (*mv).registers_table[cod_reg] = (int)(((*mv).registers_table[cod_reg] & 0xFFFF00FF) | ((valor & 0x000000ff) << 8)); // Caso modificar AH
             break;
         }
         case 3:{
-            (*mv).registers_table[cod_reg] = (int)((*mv).registers_table[cod_reg] & 0xFFFF0000) + (valor & 0x0000FFFF); //Caso modificar AX
+            (*mv).registers_table[cod_reg] = (int)(((*mv).registers_table[cod_reg] & 0xFFFF0000) + (valor & 0x0000FFFF)); //Caso modificar AX
             break;
         }
     }
@@ -650,7 +662,10 @@ void set_registro(int op,unsigned int valor, struct VM* mv){
 void set_value(int value, char op, int op_content, struct VM *mv, int *error) {
     if(op == 0) { // Si el operando A es de memoria
         int pointer = get_puntero(op_content, *mv);
-        set_memoria(pointer, value, mv, 4, error);
+        int type = (op_content >> 22 )& 0x3;
+        type ^= 0x03;
+        type++;
+        set_memoria(pointer, value, mv, type, error);
     }
     else if(op == 2)  // Si el operando A es un registro
         set_registro(op_content,value, mv);

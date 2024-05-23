@@ -43,4 +43,5 @@ void show_format_write( int acum, char format, int size_cells);
 void change_cc(struct  VM* mv, int value_A);
 void set_value(int value, char op, int op_content, struct VM *mv, int *error);
 void modifica_vmi(struct VM* mv, char* filename_vmi);
+int get_size(int content);
 #endif //VIRTUAL_MACHINE_FUNCTIONS_H

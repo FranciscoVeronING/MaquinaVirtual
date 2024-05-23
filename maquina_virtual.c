@@ -132,7 +132,7 @@ void dissasembler_func(struct  VM mv){
     }*/
     index = mv.registers_table[0] >>16;
     pos_act =  (mv.segment_descriptor_table[index].base);
-    while(mv.segment_descriptor_table[index].size != 0 && pos_act < mv.segment_descriptor_table[index].size) {
+    while(mv.segment_descriptor_table[index].size != 0 && pos_act < (mv.segment_descriptor_table[index].size + (mv.segment_descriptor_table[index].base))) {
         /// [pos instruccion]  instrucciones en hexa | MNEM  OPA, OPB
         printf("\n[%04X] ",(unsigned int)   pos_act);
 

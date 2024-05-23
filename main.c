@@ -102,14 +102,21 @@ int main(int argc, char *argv[]) {
                 content_cs[j] = aux;
                 j++;
             } while (j< size_cs);
+
             fread(mv.memory, sizeof (unsigned char), size_ks, file_mv_vmx);
              j = size_ks;
              int i = 0;
-            while (j < (size_cs+size_ks)){
+            /*while (j < (size_cs+size_ks)){
                 mv.memory[j] = content_cs[i];
                 j++;
                 i++;
-            }
+            }*/
+            do{
+                mv.memory[j] = content_cs[i];
+                j++;
+                i++;
+            }while(j < (size_cs+size_ks));
+
             fclose(file_mv_vmx);
         }
     }
@@ -173,7 +180,7 @@ int main(int argc, char *argv[]) {
     }
     ///EJECUCION
     int  opB_content, opA_content;
-    unsigned char pos_act;
+     char pos_act;
     char opA, opB, cod_op;
     char opA_size, opB_size;
 
@@ -182,7 +189,7 @@ int main(int argc, char *argv[]) {
     while (error == 0 && (mv.registers_table[5] &  0x0000FFFF) < (mv.segment_descriptor_table[indexIP].base +mv.segment_descriptor_table[indexIP].size)) {
             //carga de operandos
          index = mv.registers_table[5] & 0x0000ffff;
-         pos_act = (unsigned char) mv.memory[index];//este ta bom, creo que el problema es que index no lo actualizamos, y siempre va a ser este
+         pos_act = (char) mv.memory[index];//este ta bom, creo que el problema es que index no lo actualizamos, y siempre va a ser este
          opB = (char) (((pos_act & 0b11000000) >> 6) & 0b00000011);
          opA = (char) ((pos_act & 0b00110000) >> 4);
          cod_op = (char) (pos_act & 0b00011111);

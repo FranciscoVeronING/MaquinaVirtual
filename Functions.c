@@ -424,9 +424,9 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
 void POP(struct VM* mv, int opA_content, char opA, int *error){
     int sp_reg = get_registro(0x6,*mv);
     int ss_reg = get_registro(0x3,*mv);
-    int value = get_memoria(sp_reg,*mv,error, 2);
+    int value = get_memoria(sp_reg,*mv,error, 4);
     sp_reg += 4;
-    if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size + 4)
+    if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size +4)
         *error = 6;
     else{
         MOV(mv,opA_content,value,opA,0x0,error);
@@ -459,6 +459,7 @@ void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes
     int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
     int aux = cant_bytes - 1;
     int index_sdt = (int)(pointer  >> 16);
+    index += (*mv).segment_descriptor_table[index_sdt].base;
     if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
         for (int i = 0; i < cant_bytes; ++i) {
             (*mv).memory[index] = (char) (value >> (8 * aux));
@@ -474,8 +475,8 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
     ///hay 2 opciones, si es memoria directa, o si es la memoria de un registro
     unsigned int value = 0;
     int index = pointer & 0x0000FFFF; //OFFSET
-    int index_sdt = (int)(pointer & 0xFFFF0000)>>16; //OFFSET
-
+    int index_sdt = (int)(pointer  >> 16); //OFFSET
+    index += mv.segment_descriptor_table[index_sdt].base;
     if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= ((mv.segment_descriptor_table[index_sdt].base + mv.segment_descriptor_table[index_sdt].size) - 4))) {
         switch (type) {
             case 3:{ ///byte

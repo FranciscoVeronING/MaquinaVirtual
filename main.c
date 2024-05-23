@@ -23,7 +23,6 @@ int main(int argc, char *argv[]) {
     unsigned short int offset_entry_point;
     unsigned int flag_break_point = 0; // -1 si no existe archivo vmi, 0 si existe, 1 cuando se ejecuta la instruccion SYS y se debugea paso a paso
 
-    unsigned char filename_vmx_content;
     unsigned int size_memory_p = 16384;
 
     ///variables para .vmi
@@ -87,22 +86,32 @@ int main(int argc, char *argv[]) {
                     offset_entry_point = 0;
                 }
             }
-
+            ///Carga de tablas
+            set_SDT(&mv, size_cs, size_ds, size_es, size_ss, size_ks, size_memory_p, &error);
+            set_registers_table(&mv, size_cs, size_ds, size_es, size_ss, size_ks, offset_entry_point);
             ///CARGA DE MEMORIA
             mv.memory = (unsigned char *) malloc(size_memory_p * sizeof(unsigned char));
             if(mv.memory == NULL)
                 printf("Error al crear malloc");
-            int j= 0;
+            unsigned char content_cs[size_cs];
+            fread(&content_cs, sizeof (unsigned char), size_cs, file_mv_vmx);
+            fread(mv.memory, sizeof (unsigned char), size_ks, file_mv_vmx);
+            int j=size_ks, i = 0;
+            while (j < (size_cs+size_ks)){
+                mv.memory[j] = content_cs[i];
+                j++;
+                i++;
+            }
+
+           /* int j= 0;
             fread(&filename_vmx_content, sizeof(unsigned char), 1, file_mv_vmx);
             while (!feof(file_mv_vmx)) {
                 mv.memory[j] = filename_vmx_content;
                 j++;
                 fread(&filename_vmx_content, sizeof(unsigned char), 1, file_mv_vmx);
             }
+            */
             fclose(file_mv_vmx);
-
-            set_SDT(&mv, size_cs, size_ds, size_es, size_ss, size_ks, size_memory_p, &error);
-            set_registers_table(&mv, size_cs, size_ds, size_es, size_ss, size_ks, offset_entry_point);
         }
     }
     ///Lectura de .vmi
@@ -170,10 +179,10 @@ int main(int argc, char *argv[]) {
     char opA_size, opB_size;
 
    int indexIP = mv.registers_table[5]>>16;
-   int index;
+   int index ;
     while (error == 0 && (mv.registers_table[5] &  0x0000FFFF)< mv.segment_descriptor_table[indexIP].size) {
             //carga de operandos
-         index =  mv.registers_table[5] & 0x0000ffff;
+         index = mv.segment_descriptor_table[indexIP].base + (mv.registers_table[5] & 0x0000ffff);
          pos_act = (char) mv.memory[index];//este ta bom, creo que el problema es que index no lo actualizamos, y siempre va a ser este
          opB = (char) (((pos_act & 0b11000000) >> 6) & 0b00000011);
          opA = (char) ((pos_act & 0b00110000) >> 4);
@@ -187,8 +196,8 @@ int main(int argc, char *argv[]) {
             //CARGAMOS EN OPX_CONTENT EL CONTENIDO DE LOS OPERANDOS.
          opB_content = 0x00000000;
          opA_content = 0x00000000;
-         set_op(&opB_content, opB_size, &mv);
-         set_op(&opA_content, opA_size, &mv);
+         set_op(&opB_content, opB_size, &mv, &error);
+         set_op(&opA_content, opA_size, &mv, &error);
             //Se actualiza IP
          mv.registers_table[5] += 1; //SE SACA IP Y LA DE ARRIBA, si es 5, actualiza ip de una
          if (flag_break_point){

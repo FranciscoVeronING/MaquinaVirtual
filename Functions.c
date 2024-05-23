@@ -413,7 +413,7 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
     int ss_reg = get_registro(0x3, *mv);
     sp_reg -= 4;
     if (sp_reg < ss_reg)
-        *error = 5;
+        *error = 5;//stack Overflow
     else {
         set_registro(0x6, sp_reg, mv);
         int value = value_op(opA_content, opA, *mv, error);
@@ -422,7 +422,7 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
         int aux = 3;
         int index_sdt = (int)(sp_reg  >> 16);
         index += (*mv).segment_descriptor_table[index_sdt].base;
-        if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
+        if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) ))) {
             for (int i = 0; i < 4; ++i) {
                 (*mv).memory[index] = (char) (value >> (8 * aux));
                 aux--;
@@ -437,8 +437,8 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
 void POP(struct VM* mv, int opA_content, char opA, int *error){
     int sp_reg = get_registro(0x6,*mv);
     int ss_reg = get_registro(0x3,*mv);
-    if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size +4)
-        *error = 6;
+    if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size )
+        *error = 6; // Stack Underflow
     else{
         switch (opA) {
             case 0 :{
@@ -449,7 +449,7 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
                 int aux = 3;
                 int index_sdt = (int)(sp_reg  >> 16);
                 index += (*mv).segment_descriptor_table[index_sdt].base;
-                if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
+                if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size)))) {
                     for (int i = 0; i < 4; ++i) {
                         (*mv).memory[index] = (char) (value >> (8 * aux));
                         aux--;
@@ -476,7 +476,7 @@ void CALL(struct VM* mv, int opB_content, char opB, int *error){
     int ss_reg = get_registro(0x3, *mv);
     sp_reg -= 4;
     if (sp_reg < ss_reg)
-        *error = 5;
+        *error = 5; //stack Overflow
     else {
         set_registro(0x6, sp_reg, mv);
         int value = (*mv).registers_table[5] & 0x0000ffff;
@@ -485,7 +485,7 @@ void CALL(struct VM* mv, int opB_content, char opB, int *error){
         int aux = 3;
         int index_sdt = (int)(sp_reg  >> 16);
         index += (*mv).segment_descriptor_table[index_sdt].base;
-        if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
+        if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) ))) {
             for (int i = 0; i < 4; ++i) {
                 (*mv).memory[index] = (char) (value >> (8 * aux));
                 aux--;
@@ -502,7 +502,7 @@ void CALL(struct VM* mv, int opB_content, char opB, int *error){
 void RET(struct VM *mv, int *error){
     int sp_reg = get_registro(0x6,*mv);
     int ss_reg = get_registro(0x3,*mv);
-    if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size +4)
+    if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size )
         *error = 6; // Stack Underflow
     else {
         // Realiza un salto a la dirección de memoria extraída

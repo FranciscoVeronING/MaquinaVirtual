@@ -43,46 +43,51 @@ void set_SDT(struct VM *mv, unsigned short int size_cs, unsigned short int size_
 
 void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned short int size_ds, unsigned short int size_es, unsigned short int size_ss, unsigned short int size_ks, unsigned short int offset_entry_point) {
     int index = 0;
-    if (size_cs == 0) {
-        (*mv).registers_table[index] = -1;
-    } else {
-        (*mv).registers_table[index] = index << 16;
-        (*mv).registers_table[5] = (index << 16) + offset_entry_point; //El registro IP apunta a CS
+    if (size_ks == 0)
+        (*mv).registers_table[4] = -1;
+    else {
+        (*mv).registers_table[4] = index << 16;
+        index++;
     }
-    index++;
+    if (size_cs == 0) {
+        (*mv).registers_table[0] = -1;
+    } else {
+        (*mv).registers_table[0] = index << 16;
+        (*mv).registers_table[5] = (index << 16) + offset_entry_point; //El registro IP apunta a CS
+        index++;
+    }
     if (size_ds == 0)
-        (*mv).registers_table[index] = -1;
-    else
-        (*mv).registers_table[index] = index << 16;
-    index++;
+        (*mv).registers_table[1] = -1;
+    else {
+        (*mv).registers_table[1] = index << 16;
+        index++;
+    }
     if (size_es == 0)
-        (*mv).registers_table[index] = -1;
-    else
-        (*mv).registers_table[index] = index << 16;
-    index++;
+        (*mv).registers_table[2] = -1;
+    else {
+        (*mv).registers_table[2] = index << 16;
+        index++;
+    }
     if (size_ss == 0) {
-        (*mv).registers_table[index] = -1;
+        (*mv).registers_table[3] = -1;
         (*mv).registers_table[6] = -1;
     } else {
-        (*mv).registers_table[index] = index << 16;
+        (*mv).registers_table[3] = index << 16;
         (*mv).registers_table[6] = (index << 16) + mv->segment_descriptor_table[index].size; //el registro Sp apunta altope de la pila
     }
-    index++;
-    if (size_ks == 0)
-        (*mv).registers_table[index] = -1;
-    else
-        (*mv).registers_table[index] = index << 16;
+
     for (index = 7; index < 16; ++index) {
         (*mv).registers_table[index] = 0;
     }
 }
 
-void set_op(int *op_content, char op_size, struct VM* mv) {
+void set_op(int *op_content, char op_size, struct VM* mv, int *error) {
     char pos_act;
-    int j = 0;
+    int j = 0, index;
     while (j < op_size) {
         (*mv).registers_table[5]  += 1; //SE SACA IP Y LA DE ARRIBA
-        pos_act = (char) (*mv).memory[(*mv).registers_table[5]];
+        index = value_op(0b00110101,2,*mv,error);
+        pos_act = (char) (*mv).memory[index];
         (*op_content) <<= 8;
         (*op_content) += (unsigned char)pos_act;
         j++;
@@ -100,17 +105,17 @@ void dissasembler_func(struct  VM mv){
     int opA_size, opB_size, j, opA_content, opB_content, registro, offset;
     int index = mv.registers_table[4] >>16;
     unsigned int pos_act =  (mv.segment_descriptor_table[index].base);
-    char *auxstr;
+    /*char auxstr;
     while (mv.segment_descriptor_table[index].size != 0 && pos_act < mv.segment_descriptor_table[index].size){
         int count = 0;
         printf("\n[%04X] ", (unsigned int) pos_act);
         while(mv.memory[pos_act] != '\0') {
-            if (count <= 6 && (auxstr[6] == '\0' || auxstr[6] == NULL))
+            auxstr = mv.memory[pos_act];
+            if (count <= 6 && (auxstr == '\0' || auxstr == NULL))
                 printf("%02X ",(unsigned char) mv.memory[pos_act]);
             else
                 if (count == 6)
                     printf(" .. ");
-            auxstr[count] = mv.memory[pos_act];
             pos_act++;
             count++;
         }
@@ -124,7 +129,7 @@ void dissasembler_func(struct  VM mv){
         }
         printf("\' ");
         pos_act++;
-    }
+    }*/
     index = mv.registers_table[0] >>16;
     pos_act =  (mv.segment_descriptor_table[index].base);
     while(mv.segment_descriptor_table[index].size != 0 && pos_act < mv.segment_descriptor_table[index].size) {

@@ -417,32 +417,99 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
     else {
         set_registro(0x6, sp_reg, mv);
         int value = value_op(opA_content, opA, *mv, error);
-        set_memoria(sp_reg, value, mv, 4, error);
+        //set_memoria(sp_reg, value, mv, 4, error);
+        int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
+        int aux = 3;
+        int index_sdt = (int)(sp_reg  >> 16);
+        index += (*mv).segment_descriptor_table[index_sdt].base;
+        if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
+            for (int i = 0; i < 4; ++i) {
+                (*mv).memory[index] = (char) (value >> (8 * aux));
+                aux--;
+                index++;
+            }
+        }
+        else
+            *error = 2;
     }
 }
 
 void POP(struct VM* mv, int opA_content, char opA, int *error){
     int sp_reg = get_registro(0x6,*mv);
     int ss_reg = get_registro(0x3,*mv);
-    int value = get_memoria(sp_reg,*mv,error, 4);
-    sp_reg += 4;
     if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size +4)
         *error = 6;
     else{
-        MOV(mv,opA_content,value,opA,0x0,error);
+        switch (opA) {
+            case 0 :{
+
+                //set_memoria(get_puntero(opA_content,(*mv)), value_op(0x60000, 0,*mv, error), mv, 4, error);
+                int value = value_op(0x60000, 0,*mv, error);
+                int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
+                int aux = 3;
+                int index_sdt = (int)(sp_reg  >> 16);
+                index += (*mv).segment_descriptor_table[index_sdt].base;
+                if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
+                    for (int i = 0; i < 4; ++i) {
+                        (*mv).memory[index] = (char) (value >> (8 * aux));
+                        aux--;
+                        index++;
+                    }
+                }
+                else
+                    *error = 2;
+                break;
+            }
+            case 2 :{
+                set_registro(opA_content, value_op(0x60000, 0, *mv, error), mv);
+                break;
+            }
+        }
+        sp_reg += 4;
         set_registro(0x6,sp_reg,mv);
-    }
+        }
 }
 
 void CALL(struct VM* mv, int opB_content, char opB, int *error){
     // pushea el valor actual de IP en la pila
-    PUSH(mv, 0x5, 2, error);
+    int sp_reg = get_registro(0x6, *mv);
+    int ss_reg = get_registro(0x3, *mv);
+    sp_reg -= 4;
+    if (sp_reg < ss_reg)
+        *error = 5;
+    else {
+        set_registro(0x6, sp_reg, mv);
+        int value = (*mv).registers_table[5] & 0x0000ffff;
+        //set_memoria(sp_reg, value, mv, 4, error);
+        int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
+        int aux = 3;
+        int index_sdt = (int)(sp_reg  >> 16);
+        index += (*mv).segment_descriptor_table[index_sdt].base;
+        if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
+            for (int i = 0; i < 4; ++i) {
+                (*mv).memory[index] = (char) (value >> (8 * aux));
+                aux--;
+                index++;
+            }
+        }
+        else
+            *error = 2;
+    }
     // salta a la direccion dada por el operando
     JMP(mv, opB_content, opB, error);
 }
 
 void RET(struct VM *mv, int *error){
-    POP(mv, 0x5, 2,error);
+    int sp_reg = get_registro(0x6,*mv);
+    int ss_reg = get_registro(0x3,*mv);
+    if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size +4)
+        *error = 6; // Stack Underflow
+    else {
+        // Realiza un salto a la dirección de memoria extraída
+        mv->registers_table[5] = get_memoria(get_puntero(0x60000,(*mv)),(*mv),error,0);
+        sp_reg += 4;
+        set_registro(0x6, sp_reg, mv);
+    }
 }
 
 int get_puntero(int op_content, struct VM mv){
@@ -454,12 +521,13 @@ int get_puntero(int op_content, struct VM mv){
   return pointer;
 }
 
+
 void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes, int * error){
     /// el puntero tiene 2 bytes a codigo de segmento y 2 bytes de offset
     int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
     int aux = cant_bytes - 1;
     int index_sdt = (int)(pointer  >> 16);
-    index += (*mv).segment_descriptor_table[index_sdt].base;
+    //index += (*mv).segment_descriptor_table[index_sdt].base;
     if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
         for (int i = 0; i < cant_bytes; ++i) {
             (*mv).memory[index] = (char) (value >> (8 * aux));
@@ -476,9 +544,9 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
     unsigned int value = 0;
     int index = pointer & 0x0000FFFF; //OFFSET
     int index_sdt = (int)(pointer  >> 16); //OFFSET
-    index += mv.segment_descriptor_table[index_sdt].base;
+    //index += mv.segment_descriptor_table[index_sdt].base;
     if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= ((mv.segment_descriptor_table[index_sdt].base + mv.segment_descriptor_table[index_sdt].size) - 4))) {
-        switch (type) {
+         switch (type) {
             case 3:{ ///byte
                 value = (mv).memory[index+3];
                 break;

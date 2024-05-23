@@ -94,23 +94,22 @@ int main(int argc, char *argv[]) {
             if(mv.memory == NULL)
                 printf("Error al crear malloc");
             unsigned char content_cs[size_cs];
-            fread(&content_cs, sizeof (unsigned char), size_cs, file_mv_vmx);
+           // fread(&content_cs, sizeof (unsigned char), size_cs, file_mv_vmx);
+            int j= 0;
+            unsigned char aux;
+            do{
+                fread(&aux, sizeof(unsigned char), 1, file_mv_vmx);
+                content_cs[j] = aux;
+                j++;
+            } while (j< size_cs);
             fread(mv.memory, sizeof (unsigned char), size_ks, file_mv_vmx);
-            int j=size_ks, i = 0;
+             j = size_ks;
+             int i = 0;
             while (j < (size_cs+size_ks)){
                 mv.memory[j] = content_cs[i];
                 j++;
                 i++;
             }
-
-           /* int j= 0;
-            fread(&filename_vmx_content, sizeof(unsigned char), 1, file_mv_vmx);
-            while (!feof(file_mv_vmx)) {
-                mv.memory[j] = filename_vmx_content;
-                j++;
-                fread(&filename_vmx_content, sizeof(unsigned char), 1, file_mv_vmx);
-            }
-            */
             fclose(file_mv_vmx);
         }
     }
@@ -174,16 +173,16 @@ int main(int argc, char *argv[]) {
     }
     ///EJECUCION
     int  opB_content, opA_content;
-    char pos_act;
+    unsigned char pos_act;
     char opA, opB, cod_op;
     char opA_size, opB_size;
 
-   int indexIP = mv.registers_table[5]>>16;
+   int indexIP = (int)((mv.registers_table[5]>>16) & 0xf);
    int index ;
-    while (error == 0 && (mv.registers_table[5] &  0x0000FFFF)< mv.segment_descriptor_table[indexIP].size) {
+    while (error == 0 && (mv.registers_table[5] &  0x0000FFFF) < (mv.segment_descriptor_table[indexIP].base +mv.segment_descriptor_table[indexIP].size)) {
             //carga de operandos
-         index = mv.segment_descriptor_table[indexIP].base + (mv.registers_table[5] & 0x0000ffff);
-         pos_act = (char) mv.memory[index];//este ta bom, creo que el problema es que index no lo actualizamos, y siempre va a ser este
+         index = mv.registers_table[5] & 0x0000ffff;
+         pos_act = (unsigned char) mv.memory[index];//este ta bom, creo que el problema es que index no lo actualizamos, y siempre va a ser este
          opB = (char) (((pos_act & 0b11000000) >> 6) & 0b00000011);
          opA = (char) ((pos_act & 0b00110000) >> 4);
          cod_op = (char) (pos_act & 0b00011111);

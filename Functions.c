@@ -232,7 +232,7 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
             break;
         }
         case 4:{
-            int index = get_puntero(0x0D0000, *mv);     //obtiene la dirección de memoria del registro EDX
+          //  int index = get_puntero(0x0D0000, *mv);//obtiene la dirección de memoria del registro EDX
             while (mv->memory[index] != '\0') {
                 printf("%c", mv->memory[index]);
                 index++;

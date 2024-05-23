@@ -53,7 +53,7 @@ void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned sho
         (*mv).registers_table[0] = -1;
     } else {
         (*mv).registers_table[0] = index << 16;
-        (*mv).registers_table[5] = (index << 16) + offset_entry_point; //El registro IP apunta a CS
+        (*mv).registers_table[5] = (index << 16) + (*mv).segment_descriptor_table[index].base + offset_entry_point; //El registro IP apunta a CS
         index++;
     }
     if (size_ds == 0)
@@ -86,7 +86,7 @@ void set_op(int *op_content, char op_size, struct VM* mv, int *error) {
     int j = 0, index;
     while (j < op_size) {
         (*mv).registers_table[5]  += 1; //SE SACA IP Y LA DE ARRIBA
-        index = value_op(0b00110101,2,*mv,error);
+        index = (*mv).registers_table[5] & 0x0000ffff;
         pos_act = (char) (*mv).memory[index];
         (*op_content) <<= 8;
         (*op_content) += (unsigned char)pos_act;

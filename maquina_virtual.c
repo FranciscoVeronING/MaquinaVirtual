@@ -179,10 +179,14 @@ void dissasembler_func(struct  VM mv){
 
                 registro = (opA_content >> 16) & 0x00000f;
                 offset = opA_content & 0x00FFFF;
+                offset <<= 16;
+                offset >>= 16;
                 if (offset == 0)
                     printf("%c[%s]", setlabel(opA_content),regs_tags[registro]);
-                else
+                else if (offset > 0)
                     printf("%c[%s+%d]", setlabel(opA_content), regs_tags[registro], offset);
+                else
+                    printf("%c[%s%d]", setlabel(opA_content), regs_tags[registro], offset);
                 break;
             }
             case 1: {    //inmediato
@@ -200,10 +204,14 @@ void dissasembler_func(struct  VM mv){
             case 0: {    //memoria
                 registro = (opB_content >> 16) & 0x00000f;
                 offset = opB_content & 0x00FFFF;
+                offset <<= 16;
+                offset >>= 16;
                 if (offset == 0)
                     printf("%c[%s]", setlabel(opB_content),regs_tags[registro]);
-                else
+                else if(offset > 0)
                     printf("%c[%s+%d]", setlabel(opB_content), regs_tags[registro], offset);
+                else
+                    printf("%c[%s%d]", setlabel(opB_content), regs_tags[registro], offset);
                 break;
             }
             case 1: {    //inmediato

@@ -11,11 +11,9 @@
 #endif
 
 void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB, int *error){
-    int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
-    value_A = value_B;
     // Guardamos el valor resultante de vuelta en el operando A
-    set_value(value_A, opA, opA_content, mv, error);
+    set_value(value_B, opA, opA_content, mv, error);
 
 }
 
@@ -529,7 +527,10 @@ int get_puntero(int op_content, struct VM mv){
   char index_register = (char)((op_content >> 16) & 0xf);
   int index = (int)((mv.registers_table[index_register] >> 16)& 0xff);
   int base = mv.segment_descriptor_table[index].base;
-  pointer = (index << 16) + base + (op_content & 0x0000FFFF) + (mv.registers_table[index_register] & 0x0000ffff);
+  op_content &= 0x0000ffff;
+  op_content <<= 16;
+  op_content >>= 16;
+  pointer = (index << 16) + base + op_content  + (mv.registers_table[index_register] & 0x0000ffff);
   return pointer;
 }
 
@@ -661,10 +662,11 @@ void set_registro(int op,unsigned int valor, struct VM* mv){
 
 void set_value(int value, char op, int op_content, struct VM *mv, int *error) {
     if(op == 0) { // Si el operando A es de memoria
-        int pointer = get_puntero(op_content, *mv);
         int type = (op_content >> 22 )& 0x3;
         type ^= 0x03;
         type++;
+        op_content = op_content & 0x0fffff;
+        int pointer = get_puntero(op_content, *mv);
         set_memoria(pointer, value, mv, type, error);
     }
     else if(op == 2)  // Si el operando A es un registro

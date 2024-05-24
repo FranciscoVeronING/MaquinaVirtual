@@ -81,7 +81,7 @@ void set_registers_table(struct VM *mv, unsigned short int size_cs, unsigned sho
     }
 }
 
-void set_op(int *op_content, char op_size, struct VM* mv, int *error) {
+void set_op(int *op_content, char op_size, struct VM* mv) {
     char pos_act;
     int j = 0, index;
     while (j < op_size) {
@@ -103,36 +103,49 @@ void dissasembler_func(struct  VM mv){
 
     char opA, opB, cod_op;
     int opA_size, opB_size, j, opA_content, opB_content, registro, offset;
-    int index = mv.registers_table[4] >>16;
-    unsigned int pos_act =  (mv.segment_descriptor_table[index].base);
-    /*char *auxstr;
-    while (mv.segment_descriptor_table[index].size != 0 && pos_act < (mv.segment_descriptor_table[index].size + (mv.segment_descriptor_table[index].base))){
-        int count = 0;
-        printf("\n[%04X] ", (unsigned int) pos_act);
-        while(mv.memory[pos_act] != '\0') {
-            *auxstr = mv.memory[pos_act];
-           if (count <= 6 && (*auxstr != '\0' || auxstr == NULL))
-                printf("%02X ",(unsigned char) mv.memory[pos_act]);
-            else
-                if (count == 6)
-                    printf(" .. ");
-            pos_act++;
-            count++;
-            auxstr++;
-        }
 
-        printf(" | \'");
-        for (int i = 0; i <= count; ++i) {
-            printf("%c", auxstr[i]);
+    ////Muestra de Constants Segment
+    if(mv.registers_table[4] != -1) {
+        printf("\n /////////////CONSTANTS  SEGMENT/////////////");
+        int indexKS = mv.registers_table[4] >> 16;
+        unsigned int pos_act_ks = (mv.segment_descriptor_table[indexKS].base);
+        unsigned int strsize;
+        int i;
+        while(mv.segment_descriptor_table[indexKS].size != 0 && pos_act_ks < (mv.segment_descriptor_table[indexKS].size + (mv.segment_descriptor_table[indexKS].base))) {
+            printf("\n [%04X] ", (unsigned int) pos_act_ks);
+            char auxstr[100];
+            i = 0;
+            while (mv.memory[pos_act_ks] != '\0') {
+                auxstr[i] = (char)mv.memory[pos_act_ks];
+                i++;
+                pos_act_ks++;
+            }
+            pos_act_ks++;
+            auxstr[i] = '\0'; //aca se guarda el string
+            strsize = strlen(auxstr);
+            if (strsize > 7) {   //caso para strings largos
+                for (int k = 0; k < 6; ++k) {
+                    printf("%02X ", (unsigned char) auxstr[k]);
+                }
+                printf("..");
+            } else {
+                for (int k = 0; k < strsize; ++k)
+                    printf("%02X ", (unsigned char) auxstr[k]);
+               }
+            printf("| %s ", auxstr);
         }
-        printf("\' ");
-        pos_act++;
-    }*/
-    index = mv.registers_table[0] >>16;
-    pos_act =  (mv.segment_descriptor_table[index].base);
+    }
+
+    printf("\n ////////////////CODE SEGMENT////////////////");
+        ////Muestra de Code Segment
+    int index = mv.registers_table[0] >>16;
+    unsigned int pos_act =  (mv.segment_descriptor_table[index].base);
     while(mv.segment_descriptor_table[index].size != 0 && pos_act < (mv.segment_descriptor_table[index].size + (mv.segment_descriptor_table[index].base))) {
         /// [pos instruccion]  instrucciones en hexa | MNEM  OPA, OPB
-        printf("\n[%04X] ",(unsigned int)   pos_act);
+        if(pos_act == mv.entry_point)
+            printf("\n>[%04X] ",(unsigned int)   pos_act);
+        else
+            printf("\n [%04X] ",(unsigned int)   pos_act);
 
         opB = (char) (((mv.memory[pos_act] & 0b11000000) >> 6) & 0b00000011);
         opA = (char) ((mv.memory[pos_act] & 0b00110000) >> 4);
@@ -195,6 +208,9 @@ void dissasembler_func(struct  VM mv){
                 printf("%s", regs_tags[(char)opA_content]);
                 break;
             }
+            default:{
+                break;
+            }
         }
         if(opA != 3)
             printf(",");
@@ -221,14 +237,18 @@ void dissasembler_func(struct  VM mv){
 
                 break;
             }
+            default:{
+                break;
+            }
         }
         pos_act++;
     }
+    printf("\n ////////////////////////////////////////////\n");
 }
 
 unsigned char setlabel(int content) {
     content >>= 20;
-    content = (char)(content & 0x0f);
+    content = (content & 0x0000000f);
 
     char aux;
     switch (content) {

@@ -21,19 +21,19 @@ int main(int argc, char *argv[]) {
     unsigned short int size_ss = 0;
     unsigned short int size_ks = 0;
     unsigned short int offset_entry_point;
-    unsigned int flag_break_point = 0; // -1 si no existe archivo vmi, 0 si existe, 1 cuando se ejecuta la instruccion SYS y se debugea paso a paso
+    unsigned int flag_break_point = 0;
 
     unsigned int size_memory_p = 16384;
 
     int aux;
     for (int i = 0; i < argc; i++) {
         if (strstr(argv[i], ".vmx") != NULL) {
-            aux = strlen(argv[i]);
+            aux = (int)strlen(argv[i]);
             filename_vmx = (char *) malloc((aux+1)*sizeof (char));
             strcpy(filename_vmx,argv[i]);
         }else
         if (strstr(argv[i], ".vmi") != NULL) {
-            aux = strlen(argv[i]);
+            aux = (int)strlen(argv[i]);
             filename_vmi = (char *) malloc((aux+1)*sizeof (char));
             strcpy(filename_vmi,argv[i]);
         }else
@@ -44,13 +44,12 @@ int main(int argc, char *argv[]) {
             dissassembler_flag = 1;
         }
     }
-    /// Lectura de tamaño de Memoria, solo parametro M para vmx? o para vmi tambien es valido?
+    /// Lectura de tamaño de Memoria
     if (option_m) {
         size_memory_p = option_m * 1024;
     }
 
     ///Lectura de .vmx
-
     if (filename_vmx) {       //si hay un arhivo .vmx
         file_mv_vmx = fopen(filename_vmx, "rb");
         if (file_mv_vmx == NULL) {
@@ -90,23 +89,17 @@ int main(int argc, char *argv[]) {
             if(mv.memory == NULL)
                 printf("Error al crear malloc");
             unsigned char content_cs[size_cs];
-           // fread(&content_cs, sizeof (unsigned char), size_cs, file_mv_vmx);
             int j= 0;
-            unsigned char aux;
+            unsigned char auxstr;
             do{
-                fread(&aux, sizeof(unsigned char), 1, file_mv_vmx);
-                content_cs[j] = aux;
+                fread(&auxstr, sizeof(unsigned char), 1, file_mv_vmx);
+                content_cs[j] = auxstr;
                 j++;
             } while (j< size_cs);
 
             fread(mv.memory, sizeof (unsigned char), size_ks, file_mv_vmx);
              j = size_ks;
              int i = 0;
-            /*while (j < (size_cs+size_ks)){
-                mv.memory[j] = content_cs[i];
-                j++;
-                i++;
-            }*/
             do{
                 mv.memory[j] = content_cs[i];
                 j++;
@@ -115,7 +108,9 @@ int main(int argc, char *argv[]) {
 
             fclose(file_mv_vmx);
         }
+        mv.entry_point = offset_entry_point;
     }
+
     ///Lectura de .vmi
     unsigned short int size_memory_vmi;
     if (filename_vmi != NULL) {
@@ -159,13 +154,13 @@ int main(int argc, char *argv[]) {
             fclose(file_mv_vmi);
         }
     }
-
     if(filename_vmx)
         mv.size_memory = size_memory_p;
     else
         mv.size_memory = size_memory_vmi;
-
-
+    //////Disassembler
+    if(dissassembler_flag == 1)
+        dissasembler_func(mv);
     ///EJECUCION
     int  opB_content, opA_content;
      char pos_act;
@@ -177,7 +172,7 @@ int main(int argc, char *argv[]) {
     while (error == 0 && (mv.registers_table[5] &  0x0000FFFF) < (mv.segment_descriptor_table[indexIP].base +mv.segment_descriptor_table[indexIP].size)) {
             //carga de operandos
          index = mv.registers_table[5] & 0x0000ffff;
-         pos_act = (char) mv.memory[index];//este ta bom, creo que el problema es que index no lo actualizamos, y siempre va a ser este
+         pos_act = (char) mv.memory[index];
          opB = (char) (((pos_act & 0b11000000) >> 6) & 0b00000011);
          opA = (char) ((pos_act & 0b00110000) >> 4);
          cod_op = (char) (pos_act & 0b00011111);
@@ -190,8 +185,8 @@ int main(int argc, char *argv[]) {
             //CARGAMOS EN OPX_CONTENT EL CONTENIDO DE LOS OPERANDOS.
          opB_content = 0x00000000;
          opA_content = 0x00000000;
-         set_op(&opB_content, opB_size, &mv, &error);
-         set_op(&opA_content, opA_size, &mv, &error);
+         set_op(&opB_content, opB_size, &mv);
+         set_op(&opA_content, opA_size, &mv);
             //Se actualiza IP
          mv.registers_table[5] += 1; //SE SACA IP Y LA DE ARRIBA, si es 5, actualiza ip de una
          if (flag_break_point){
@@ -201,13 +196,10 @@ int main(int argc, char *argv[]) {
          else {
              llamado_funcion(&mv, opA, opA_content, opB, opB_content, cod_op, &error, &flag_break_point,filename_vmi);
          }
-             //para ver lamemoria y las tablas, debug caserito
+             //para ver la memoria y las tablas, debug caserito
             //printf("error = %d", error);
     }
-
     Errores(error);
-    if(dissassembler_flag == 1)
-        dissasembler_func(mv);
 
     free(filename_vmi);
     free(filename_vmx);

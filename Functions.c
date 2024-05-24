@@ -14,7 +14,6 @@ void MOV(struct VM* mv, int opA_content, int opB_content, char opA, char opB, in
     int value_B =(int) value_op(opB_content, opB, *mv, error);
     // Guardamos el valor resultante de vuelta en el operando A
     set_value(value_B, opA, opA_content, mv, error);
-
 }
 
 
@@ -26,7 +25,7 @@ void ADD(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
      value_A += value_B;
     // Guardamos el valor resultante de vuelta en el operando A
     set_value(value_A, opA, opA_content, mv, error);
-    //cambiamos el valor del CC(condition code
+    //cambiamos el valor del CC(condition code)
     change_cc(mv, value_A);
 }
 
@@ -84,7 +83,7 @@ void AND(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     value_A &= value_B;
     // Guardamos el valor resultante de vuelta en el operando A
     set_value(value_A, opA, opA_content, mv, error);
-    //cambiamos el valor del CC(condition code
+    //cambiamos el valor del CC(condition code)
     change_cc(mv, value_A);
 }
 
@@ -106,7 +105,7 @@ void XOR(struct VM* mv, int opA_content, int opB_content , char opA, char opB, i
     value_A ^= value_B;
     // Guardamos el valor resultante de vuelta en el operando A
     set_value(value_A, opA, opA_content, mv, error);
-    //cambiamos el valor del CC(condition code
+    //cambiamos el valor del CC(condition code)
     change_cc(mv, value_A);
 }
 
@@ -178,6 +177,9 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
                         set_memoria(index, aux, mv, size_cells, error);
                         break;
                     }
+                    default:{
+                        break;
+                    }
                 }
                 index+= size_cells;
             }
@@ -193,10 +195,6 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
              *  %02 1 1: escribe caracteres \n
              *   %01 0 1: escribe decimal \n
              */
-
-            // se carga en index el valor donde apunta en memoria EDX xx xx cc cc
-            //  xx xx esta reservado para ubicacion del segmento
-            //  cc cc esta la direccion(offset) en donde esta los datos de EDX en memoria
             index = index & 0x0000FFFF;
             for (int j = 0; j < cant_cells; j++) {
                 printf("[%04X] \t", index);
@@ -207,10 +205,10 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
                     acum |= (*mv).memory[index]; //se guarda el valor y se shiftea 1 byte a la izquierda
                     index++;
                 }
-                show_format_write(acum, format & 0X8, size_cells);
-                show_format_write(acum, format & 0X4, size_cells);
-                show_format_write(acum, format & 0X2, size_cells);
-                show_format_write(acum, format & 0X1, size_cells);
+                show_format_write(acum, (char)(format & 0X8), size_cells);
+                show_format_write(acum, (char)(format & 0X4), size_cells);
+                show_format_write(acum, (char)(format & 0X2), size_cells);
+                show_format_write(acum, (char)(format & 0X1), size_cells);
                 printf("\n");
             }
             break;
@@ -220,7 +218,7 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
             int max_chars = mv->registers_table[0xC];       //obtiene la cantidad máxima de caracteres a leer desde CX
             char input;
             int count = 0;
-            while ((max_chars == -1 || count < max_chars) && (input = getchar()) != '\n') {
+            while ((max_chars == -1 || count < max_chars) && (input = (char)getchar()) != '\n') {
                 mv->memory[index] = input;  //almacena el char en la direccion de memoria actual
                 index++;
                 count++;
@@ -234,7 +232,6 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
                 printf("%c", mv->memory[index]);
                 index++;
             }
-            //printf("\n");
             break;
         }
         case 7:{       //Limpia la terminal
@@ -248,7 +245,7 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
         case 0xf:{     //BreakPoint
             if(filename_vmi) {            //si existe archivo vmi
                 modifica_vmi(mv, filename_vmi);
-                char input = getchar();
+                char input = (char)getchar();
                 switch (input) {
                     case 'g': { // continua la ejecución
                         *flag_break_point = 0;
@@ -263,8 +260,14 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
                         *flag_break_point = 1;
                         break;
                     }
+                    default:{
+                        break;
+                    }
                 }
             }
+        }
+        default:{
+            break;
         }
     }
 }
@@ -296,20 +299,21 @@ void show_format_write( int acum, char format, int size_cells) {
         case 0x8:{
             printf("%%%X ", acum);
         }
+        default:{
+            break;
+        }
     }
 }
 
 
 void RND(struct VM* mv, int opA_content, int opB_content , char opA, char opB, int *error) {
-    // Obtenemos el valor del operando A y B
-    int value_A =(int) value_op(opA_content, opA, *mv, error);
     int value_B =(int) value_op(opB_content, opB, *mv, error);
     srand(time(NULL));
-    value_A =   rand()%value_B;
+    value_B = rand()%value_B;
     // Guardamos el valor resultante de vuelta en el operando A
-    set_value(value_A, opA, opA_content, mv, error);
+    set_value(value_B, opA, opA_content, mv, error);
     //cambiamos el valor del CC(condition code)
-    change_cc(mv, value_A);
+    change_cc(mv, value_B);
 }
 
 void JMP(struct VM* mv, int opA_content, char opA, int *error){
@@ -428,8 +432,7 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
     else {
         set_registro(0x6, sp_reg, mv);
         unsigned int value = value_op(opA_content, opA, *mv, error);
-        //set_memoria(sp_reg, value, mv, 4, error);
-        unsigned int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
+        unsigned int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset del puntero, en getpuntero hicimos la suma de os 2 offsets
         int aux = 3;
         int index_sdt = (int)(sp_reg  >> 16);
         index += (*mv).segment_descriptor_table[index_sdt].base;
@@ -453,8 +456,6 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
     else{
         switch (opA) {
             case 0 :{
-
-                //set_memoria(get_puntero(opA_content,(*mv)), value_op(0x60000, 0,*mv, error), mv, 4, error);
                 unsigned int value = value_op(0x60000, 0,*mv, error);
                 unsigned int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
                 int aux = 3;
@@ -475,6 +476,9 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
                 set_registro(opA_content, value_op(0x60000, 0, *mv, error), mv);
                 break;
             }
+            default:{
+                break;
+            }
         }
         sp_reg += 4;
         set_registro(0x6,sp_reg,mv);
@@ -482,7 +486,6 @@ void POP(struct VM* mv, int opA_content, char opA, int *error){
 }
 
 void CALL(struct VM* mv, int opB_content, char opB, int *error){
-    // pushea el valor actual de IP en la pila
     unsigned int sp_reg = get_registro(0x6, *mv);
     unsigned int ss_reg = get_registro(0x3, *mv);
     sp_reg -= 4;
@@ -491,7 +494,6 @@ void CALL(struct VM* mv, int opB_content, char opB, int *error){
     else {
         set_registro(0x6, sp_reg, mv);
         int value = (*mv).registers_table[5] & 0x0000ffff;
-        //set_memoria(sp_reg, value, mv, 4, error);
         unsigned int index = sp_reg & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
         int aux = 3;
         int index_sdt = (int)(sp_reg  >> 16);
@@ -538,10 +540,9 @@ int get_puntero(int op_content, struct VM mv){
 
 void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes, int * error){
     /// el puntero tiene 2 bytes a codigo de segmento y 2 bytes de offset
-    int index = pointer & 0x0000FFFF;//solo ponemos como index el offset delpuntero, en getpuntero hicimos la suma de os 2 offsets
+    int index = pointer & 0x0000FFFF;//solo ponemos como index el offset del puntero, en getpuntero hicimos la suma de os 2 offsets
     int aux = cant_bytes - 1;
     int index_sdt = (int)(pointer  >> 16);
-    //index += (*mv).segment_descriptor_table[index_sdt].base;
     if((index >= (*mv).segment_descriptor_table[index_sdt].base) && (index <= (((*mv).segment_descriptor_table[index_sdt].base + (*mv).segment_descriptor_table[index_sdt].size) - 4))) {
         for (int i = 0; i < cant_bytes; ++i) {
             (*mv).memory[index] = (char) (value >> (8 * aux));
@@ -558,7 +559,6 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
     int value = 0;
     int index = pointer & 0x0000FFFF; //OFFSET
     int index_sdt = (int)(pointer  >> 16); //OFFSET
-    //index += mv.segment_descriptor_table[index_sdt].base;
     if((index >= mv.segment_descriptor_table[index_sdt].base) && (index <= ((mv.segment_descriptor_table[index_sdt].base + mv.segment_descriptor_table[index_sdt].size) - 4))) {
          switch (type) {
             case 3:{ ///byte
@@ -582,17 +582,19 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
                 value = (mv).memory[index] << 24 | (mv).memory[index + 1] << 16 | (mv).memory[index + 2 ] << 8 | (mv).memory[index + 3] ;
                 break;
             }
+             default:{
+                 break;
+             }
         }
     }
     else{
         *error = 2;
     }
-    //printf("\n %x value este es el valor en getmemoria\n", value);
     return value;
 }
 
 unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  //obtiene el valor del operando
-    unsigned int value;
+    unsigned int value = 0;
     switch(op_type){
         case 0: {   //caso de memoria
             /// 0000 xxxx 11111111 11111111
@@ -612,6 +614,9 @@ unsigned int value_op(int op_content, char op_type, struct VM mv, int *error){  
             value = get_registro(op_content, mv);
             break;
         }
+        default:{
+            break;
+        }
     }
     return value;
 }
@@ -627,7 +632,7 @@ unsigned int get_registro(int op, struct VM mv) {
             break;
         }
         case 1:{
-            char temp = mv.registers_table[cod_reg] & 0xFF;
+            char temp = (char)(mv.registers_table[cod_reg] & 0xFF);
             valor = (temp & 0x80) ? (int)(temp | 0xFFFFFF00) : (int)temp;
             break;
         }
@@ -639,6 +644,10 @@ unsigned int get_registro(int op, struct VM mv) {
         case 3:{
             unsigned short int temp = mv.registers_table[cod_reg] & 0xFFFF;
             valor = (temp & 0x8000) ? (int)(temp | 0xFFFFFF00) : (int)temp;
+            break;
+        }
+        default:{
+            valor = mv.registers_table[cod_reg];
             break;
         }
     }
@@ -665,6 +674,9 @@ void set_registro(int op,unsigned int valor, struct VM* mv){
         }
         case 3:{
             (*mv).registers_table[cod_reg] = (int)(((*mv).registers_table[cod_reg] & 0xFFFF0000) + (valor & 0x0000FFFF)); //Caso modificar AX
+            break;
+        }
+        default:{
             break;
         }
     }
@@ -869,6 +881,9 @@ void Errores(int error){
         }
         case 6: {
             printf("\nError: Stack Underflow");
+            break;
+        }
+        default:{
             break;
         }
     }

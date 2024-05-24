@@ -153,7 +153,7 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
     switch (value) {
         case 1: {
             for (int n = 0; n < cant_cells; n++) {
-                printf("Ingrese el valor: ");
+                printf("Ingrese el valor: [%04X] ",index);
                 switch (format) {
                     case 1: {
                         scanf("%d", &aux);
@@ -225,10 +225,11 @@ void SYS(struct VM* mv, int value, int *error, unsigned int *flag_break_point, c
                 index++;
                 count++;
             }
+            mv->memory[index] = '\0';
             break;
         }
         case 4:{
-            int index = (get_puntero(0x0D0000, *mv) & 0x0000ffff);//obtiene la dirección de memoria del registro EDX
+            index &= 0x0000ffff;//obtiene la dirección de memoria del registro EDX
             while (mv->memory[index] != '\0') {
                 printf("%c", mv->memory[index]);
                 index++;
@@ -447,7 +448,7 @@ void PUSH(struct VM* mv, int opA_content, char opA, int *error) {
 void POP(struct VM* mv, int opA_content, char opA, int *error){
     unsigned int sp_reg = get_registro(0x6,*mv);
     unsigned int ss_reg = get_registro(0x3,*mv);
-    if(sp_reg > ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size )
+    if(sp_reg >= ss_reg + mv->segment_descriptor_table[mv->registers_table[3]>>16].size )
         *error = 6; // Stack Underflow
     else{
         switch (opA) {
@@ -554,7 +555,7 @@ void set_memoria(int pointer, unsigned int value, struct  VM* mv, int cant_bytes
 
 unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
     ///hay 2 opciones, si es memoria directa, o si es la memoria de un registro
-    unsigned int value = 0;
+    int value = 0;
     int index = pointer & 0x0000FFFF; //OFFSET
     int index_sdt = (int)(pointer  >> 16); //OFFSET
     //index += mv.segment_descriptor_table[index_sdt].base;
@@ -562,10 +563,19 @@ unsigned int get_memoria(int pointer, struct VM mv, int *error, int type){
          switch (type) {
             case 3:{ ///byte
                 value = (mv).memory[index];
+                if ((value & 0x8) == 0x8){
+                    value <<= 24;
+                    value >>= 24;
+                }
+
                 break;
             }
             case 2:{ ///word
                 value = (mv).memory[index] << 8 | (mv).memory[index + 1]; ///CARGAMOS LOS 2 BYTES MAS SIGNIFICATIVOS
+                if ((value & 0x80) == 0x80){
+                    value <<= 16;
+                    value >>= 16;
+                }
                 break;
             }
             case 0:{

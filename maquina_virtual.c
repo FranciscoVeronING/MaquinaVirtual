@@ -105,27 +105,25 @@ void dissasembler_func(struct  VM mv){
     int opA_size, opB_size, j, opA_content, opB_content, registro, offset;
     int index = mv.registers_table[4] >>16;
     unsigned int pos_act =  (mv.segment_descriptor_table[index].base);
-    /*char auxstr;
-    while (mv.segment_descriptor_table[index].size != 0 && pos_act < mv.segment_descriptor_table[index].size){
+    /*char *auxstr;
+    while (mv.segment_descriptor_table[index].size != 0 && pos_act < (mv.segment_descriptor_table[index].size + (mv.segment_descriptor_table[index].base))){
         int count = 0;
         printf("\n[%04X] ", (unsigned int) pos_act);
         while(mv.memory[pos_act] != '\0') {
-            auxstr = mv.memory[pos_act];
-            if (count <= 6 && (auxstr == '\0' || auxstr == NULL))
+            *auxstr = mv.memory[pos_act];
+           if (count <= 6 && (*auxstr != '\0' || auxstr == NULL))
                 printf("%02X ",(unsigned char) mv.memory[pos_act]);
             else
                 if (count == 6)
                     printf(" .. ");
             pos_act++;
             count++;
+            auxstr++;
         }
+
         printf(" | \'");
         for (int i = 0; i <= count; ++i) {
-            if (auxstr[i] >= 32 && auxstr[i] <= 126) {
-                printf("%c", auxstr[i]);
-            }
-            else
-                printf(".");
+            printf("%c", auxstr[i]);
         }
         printf("\' ");
         pos_act++;

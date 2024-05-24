@@ -15,8 +15,8 @@ int main(int argc, char *argv[]) {
     FILE *file_mv_vmx;
     FILE *file_mv_vmi;
 
-    unsigned short int size_cs = 0;
-    unsigned short int size_ds = 0;
+    unsigned short int size_cs;
+    unsigned short int size_ds;
     unsigned short int size_es = 0;
     unsigned short int size_ss = 0;
     unsigned short int size_ks = 0;
@@ -25,10 +25,6 @@ int main(int argc, char *argv[]) {
 
     unsigned int size_memory_p = 16384;
 
-    ///variables para .vmi
-    char *registers, *segments_descriptors;
-    unsigned char memory_vmi;
-    unsigned short int size_memory_vmi;
     int aux;
     for (int i = 0; i < argc; i++) {
         if (strstr(argv[i], ".vmx") != NULL) {
@@ -52,7 +48,7 @@ int main(int argc, char *argv[]) {
     if (option_m) {
         size_memory_p = option_m * 1024;
     }
-    mv.size_memory = size_memory_p;
+
     ///Lectura de .vmx
 
     if (filename_vmx) {       //si hay un arhivo .vmx
@@ -121,7 +117,7 @@ int main(int argc, char *argv[]) {
         }
     }
     ///Lectura de .vmi
-
+    unsigned short int size_memory_vmi;
     if (filename_vmi != NULL) {
         flag_break_point = 0;
         file_mv_vmi = fopen(filename_vmi, "rb");
@@ -131,60 +127,45 @@ int main(int argc, char *argv[]) {
         }
         unsigned char header[6];
         fread(&header, sizeof(unsigned char), 6, file_mv_vmi);
-        if (strncmp(header, "VMI24", 5) != 0 && header[5] == 1) {
-            perror("Error al abrir el archivo , header erroneo");
+        if (strncmp(header, "VMI24", 5) != 0) {
+            perror("Error al abrir el archivo, header erroneo");
             fclose(file_mv_vmi);
             return 1;
         } else {
-            registers = (char *) malloc(64*sizeof (char));
-            segments_descriptors = (char *) malloc(32*sizeof (char));
-            fread(&size_memory_vmi, sizeof(unsigned short int), 1, file_mv_vmi); ///preguntar para que corno se usa
-            fread(registers, sizeof(char), 64, file_mv_vmi);
-            fread(segments_descriptors, sizeof(char), 32, file_mv_vmi);
-            if (filename_vmx == NULL) {
-                char aux[5];
-                aux[4] = '\0';
-                int count = 0;
-                //aux = (char*) malloc(4*sizeof (char));
-                for (int i = 0; i < 16; ++i) {
-                    //aux = NULL;
-                    //*aux = registers[4 * count];
-                    aux[0] = registers[0 + 4 * i];
-                    aux[1] = registers[1 + 4 * i];
-                    aux[2] = registers[2 + 4 * i];
-                    aux[3] = registers[3 + 4 * i];
-                  //  strncpy(aux, (registers + (4 * count)), 4);
-                    printf("aux: %x\n", aux);
-                    mv.registers_table[i] = (int)strtol(aux, NULL, 16);
-                   // mv.registers_table[i] = atoi(aux);
-                }
-                ///copia de Segments_Descriptor_Table
-              //  aux = NULL;
-                count = 0;
-                for (int i = 0; i < 8; ++i) {
-                  //  aux = NULL;
-                    strncpy(aux, (segments_descriptors + (2 * count)), 2);
-                    mv.segment_descriptor_table[i].base = (unsigned short int) atoi(aux);
-                   // aux = NULL;
-                    count++;
-                    strncpy(aux, (segments_descriptors + (2 * count)), 2);
-                    mv.segment_descriptor_table[i].size = (unsigned short int) atoi(aux);
-                    count++;
-                }
-
-                ///CARGA DE MEMORIA
-
-                mv.memory = (unsigned char *) malloc(size_memory_vmi * sizeof(unsigned char));
-                int j = 0;
-                while (j<size_memory_vmi){
-                    fread(&memory_vmi, sizeof(unsigned char), 1, file_mv_vmi);
-                    mv.memory[j] = memory_vmi;
-                    j++;
+            fread(&size_memory_vmi, sizeof(unsigned short int), 1, file_mv_vmi);
+            unsigned char aux2;
+            //CARGA TABLA DE REGISTROS
+            for(int i=0; i<16; i++) {
+                for (int j = 0; j < 4; j++) {
+                    fread(&aux2, sizeof(unsigned char), 1, file_mv_vmi);
+                    mv.registers_table[i] = mv.registers_table[i] << 8 | aux2;
                 }
             }
+            //CARGA TABLA DE DESCRIPTORES DE SEGMENTO
+            for(int i=0; i<8; i++) {
+                for (int j = 0; j < 2; j++) {
+                    fread(&aux2, sizeof(unsigned char), 1, file_mv_vmi);
+                    mv.segment_descriptor_table[i].base = mv.segment_descriptor_table[i].base << 8 | aux2;
+                }
+                for (int j = 0; j < 2; j++) {
+                    fread(&aux2, sizeof(unsigned char), 1, file_mv_vmi);
+                    mv.segment_descriptor_table[i].size = mv.segment_descriptor_table[i].size << 8 | aux2;
+                }
+            }
+            //CARGA MEMORIA
+            mv.memory = (unsigned char *) malloc(size_memory_vmi * sizeof(unsigned char));
+            fread(mv.memory, sizeof(unsigned char), size_memory_vmi, file_mv_vmi);
+
             fclose(file_mv_vmi);
         }
     }
+
+    if(filename_vmx)
+        mv.size_memory = size_memory_p;
+    else
+        mv.size_memory = size_memory_vmi;
+
+
     ///EJECUCION
     int  opB_content, opA_content;
      char pos_act;
